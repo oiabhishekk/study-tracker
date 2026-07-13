@@ -928,7 +928,8 @@ function setupEventListeners() {
     
     // Reset defaults button (Resets active subject)
     document.getElementById('btn-reset').addEventListener('click', () => {
-        if (confirm(`Reset all progress for ${currentSubject.toUpperCase()} to defaults?`)) {
+        const confirmStr = prompt(`WARNING: This will reset all progress for ${currentSubject.toUpperCase()} to default!\nTo confirm, please type "yesiwanttoresetthis":`);
+        if (confirmStr === "yesiwanttoresetthis") {
             const key = `ssc_${currentSubject}_progress`;
             localStorage.removeItem(key);
             loadState();
@@ -936,7 +937,9 @@ function setupEventListeners() {
             populateTopicFilter();
             updateDashboard();
             renderLectures();
-            showToast(`${currentSubject.toUpperCase()} Reset completed!`);
+            showToast(`${currentSubject.toUpperCase()} reset successfully!`);
+        } else if (confirmStr !== null) {
+            showToast("Reset cancelled: confirmation did not match.", "warning");
         }
     });
 
