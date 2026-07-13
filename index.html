@@ -8,11 +8,19 @@
 </head>
 <body>
     <div class="container">
+        <!-- Subject Switcher Tabs -->
+        <div class="subject-tabs glass-panel">
+            <button class="subj-btn active" data-subject="maths">📐 Mathematics</button>
+            <button class="subj-btn" data-subject="gk">🌎 GK (General Knowledge)</button>
+            <button class="subj-btn" data-subject="reasoning">🧠 Reasoning</button>
+            <button class="subj-btn" data-subject="english">🔤 English</button>
+        </div>
+
         <!-- Header Section -->
         <header class="glass-panel">
             <div class="brand-section">
-                <h1>SSC Mathematics Prep</h1>
-                <p>Track, revise, and master your syllabus</p>
+                <h1 id="subject-title">SSC Mathematics Prep</h1>
+                <p id="subject-desc">Track, revise, and master your syllabus</p>
             </div>
             
             <div class="action-bar">
@@ -126,51 +134,8 @@
         <!-- Phase Breakdown Dashboard -->
         <div class="glass-panel phase-panel">
             <h2 class="panel-title">🏁 Syllabus Phase Breakdown</h2>
-            <div class="phase-grid">
-                <!-- Foundation Phase -->
-                <div class="phase-card">
-                    <div class="phase-card-header">
-                        <span class="phase-name">Foundation</span>
-                        <span class="phase-badge foundation">Phase 1</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div id="foundation-fill" class="progress-bar-fill" style="background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)"></div>
-                    </div>
-                    <div class="phase-stats">
-                        <span>Lectures Complete:</span>
-                        <span id="foundation-count" style="font-weight:700; font-family: 'JetBrains Mono', monospace;">0/0 (0%)</span>
-                    </div>
-                </div>
-
-                <!-- Arithmetic Phase -->
-                <div class="phase-card">
-                    <div class="phase-card-header">
-                        <span class="phase-name">Arithmetic</span>
-                        <span class="phase-badge arithmetic">Phase 2</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div id="arithmetic-fill" class="progress-bar-fill" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)"></div>
-                    </div>
-                    <div class="phase-stats">
-                        <span>Lectures Complete:</span>
-                        <span id="arithmetic-count" style="font-weight:700; font-family: 'JetBrains Mono', monospace;">0/0 (0%)</span>
-                    </div>
-                </div>
-
-                <!-- Advanced Maths Phase -->
-                <div class="phase-card">
-                    <div class="phase-card-header">
-                        <span class="phase-name">Advanced Maths</span>
-                        <span class="phase-badge advanced">Phase 3</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div id="advancedmaths-fill" class="progress-bar-fill" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%)"></div>
-                    </div>
-                    <div class="phase-stats">
-                        <span>Lectures Complete:</span>
-                        <span id="advancedmaths-count" style="font-weight:700; font-family: 'JetBrains Mono', monospace;">0/0 (0%)</span>
-                    </div>
-                </div>
+            <div class="phase-grid" id="phase-cards-container">
+                <!-- Filled dynamically by JavaScript -->
             </div>
         </div>
 
@@ -356,6 +321,7 @@
 
     <!-- Core App Scripts -->
     <script src="data.js"></script>
+    <script src="other_subjects_data.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -32,14 +32,14 @@ function parseCSV(text) {
 }
 
 // Convert state array back to CSV string
-function stateToCSV(lectures) {
+function stateToCSV(lecturesList) {
     const headers = [
         "Lecture", "Phase", "Topic", "Class No", "Completed", 
         "Revision 1", "Revision 2", "Questions Solved", "Weak Topic", 
         "Date Completed", "Notes"
     ];
     
-    const rows = lectures.map(l => {
+    const rows = lecturesList.map(l => {
         const escape = (val) => {
             if (val === null || val === undefined) return '';
             let str = String(val);
@@ -69,7 +69,8 @@ function stateToCSV(lectures) {
 
 // Application State
 let lectures = [];
-let currentFilterPhase = "All"; // "All", "Foundation", "Arithmetic", "Advanced Maths"
+let currentSubject = "maths"; // "maths", "gk", "reasoning", "english"
+let currentFilterPhase = "All"; // Dynamic categories depending on active subject
 let currentFilterStatus = "All"; // "All", "Completed", "Pending", "Rev1", "Rev2", "Weak"
 let currentFilterTopic = "All";
 let searchQuery = "";
@@ -91,11 +92,17 @@ window.addEventListener('DOMContentLoaded', () => {
         updateThemeIcon(savedTheme);
     }
     
+    // Set initial subject color theme on html tag
+    document.documentElement.setAttribute('data-subject', currentSubject);
+    
     // Load Data
     loadState();
     
     // Initialize Cloud Sync Settings and Badge
     loadCloudSettingsState();
+    
+    // Populate dynamic filter tabs based on active subject
+    populatePhaseTabs();
     
     // Populate Dynamic Filters
     populateTopicFilter();
@@ -115,12 +122,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Load progress state from localStorage or default CSV
 function loadState() {
-    const saved = localStorage.getItem('ssc_maths_progress');
+    const key = `ssc_${currentSubject}_progress`;
+    const saved = localStorage.getItem(key);
     if (saved) {
         try {
             lectures = JSON.parse(saved);
         } catch (e) {
-            console.error("Error parsing saved progress state. Reloading defaults.", e);
+            console.error(`Error parsing saved progress state for ${currentSubject}. Reloading defaults.`, e);
             loadDefaults();
         }
     } else {
@@ -128,14 +136,25 @@ function loadState() {
     }
 }
 
-// Load default data from raw CSV
+// Load default data from raw CSV variables
 function loadDefaults() {
-    if (typeof defaultCsvData === 'undefined') {
-        console.error("defaultCsvData is not defined. Make sure data.js is loaded first.");
+    let rawData;
+    if (currentSubject === 'maths') {
+        rawData = typeof defaultCsvData !== 'undefined' ? defaultCsvData : '';
+    } else if (currentSubject === 'gk') {
+        rawData = typeof defaultGkCsv !== 'undefined' ? defaultGkCsv : '';
+    } else if (currentSubject === 'reasoning') {
+        rawData = typeof defaultReasoningCsv !== 'undefined' ? defaultReasoningCsv : '';
+    } else if (currentSubject === 'english') {
+        rawData = typeof defaultEnglishCsv !== 'undefined' ? defaultEnglishCsv : '';
+    }
+    
+    if (!rawData) {
+        console.error(`Default data not found for subject: ${currentSubject}`);
         return;
     }
     
-    const parsed = parseCSV(defaultCsvData);
+    const parsed = parseCSV(rawData);
     if (parsed.length <= 1) {
         console.error("Parsed CSV is empty or invalid.");
         return;
@@ -165,8 +184,85 @@ function loadDefaults() {
 }
 
 function saveState() {
-    localStorage.setItem('ssc_maths_progress', JSON.stringify(lectures));
+    const key = `ssc_${currentSubject}_progress`;
+    localStorage.setItem(key, JSON.stringify(lectures));
     triggerAutoSync();
+}
+
+// Switch between subjects
+function switchSubject(subject) {
+    currentSubject = subject;
+    
+    // Update HTML attribute for dynamic color styling overrides
+    document.documentElement.setAttribute('data-subject', subject);
+    
+    // Update headers and search bar labels
+    const titleEl = document.getElementById('subject-title');
+    const descEl = document.getElementById('subject-desc');
+    const nextLabel = document.querySelector('#next-up-container').parentElement.querySelector('.stat-label');
+    
+    if (subject === 'maths') {
+        if (titleEl) titleEl.textContent = "SSC Mathematics Prep";
+        if (descEl) descEl.textContent = "Track, revise, and master your syllabus";
+        if (nextLabel) nextLabel.textContent = "Next Lecture";
+    } else if (subject === 'gk') {
+        if (titleEl) titleEl.textContent = "GK Progress Tracker";
+        if (descEl) descEl.textContent = "History, Geography, Polity, Science & General Awareness";
+        if (nextLabel) nextLabel.textContent = "Next Topic";
+    } else if (subject === 'reasoning') {
+        if (titleEl) titleEl.textContent = "SSC Reasoning Syllabus";
+        if (descEl) descEl.textContent = "Time practice, visual, logical, and analytical topics";
+        if (nextLabel) nextLabel.textContent = "Next Topic";
+    } else if (subject === 'english') {
+        if (titleEl) titleEl.textContent = "English Language Syllabus";
+        if (descEl) descEl.textContent = "Grammar rules, vocabulary lists, and comprehensions";
+        if (nextLabel) nextLabel.textContent = "Next Topic";
+    }
+    
+    // Reset filters
+    currentFilterPhase = "All";
+    currentFilterStatus = "All";
+    currentFilterTopic = "All";
+    searchQuery = "";
+    
+    // Clear inputs in DOM
+    document.getElementById('search-input').value = '';
+    document.querySelectorAll('.pill-btn').forEach(b => {
+        if (b.getAttribute('data-status') === 'All') b.classList.add('active');
+        else b.classList.remove('active');
+    });
+    
+    // Re-initialize dynamic layout components
+    loadState();
+    populatePhaseTabs();
+    populateTopicFilter();
+    updateDashboard();
+    renderLectures();
+}
+
+// Populate search filter phase tabs dynamically based on category groupings of the active subject
+function populatePhaseTabs() {
+    const tabContainer = document.querySelector('.filter-tabs');
+    if (!tabContainer) return;
+    
+    const phases = [...new Set(lectures.map(l => l.phase))].filter(Boolean);
+    
+    let html = `<button class="tab-btn active" data-phase="All">All Parts</button>`;
+    phases.forEach(phase => {
+        html += `<button class="tab-btn" data-phase="${phase}">${phase}</button>`;
+    });
+    
+    tabContainer.innerHTML = html;
+    
+    // Re-bind listeners to newly created tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            currentFilterPhase = e.currentTarget.getAttribute('data-phase');
+            renderLectures();
+        });
+    });
 }
 
 // Extract unique topics to fill select filter dropdown
@@ -261,8 +357,8 @@ function updateDashboard() {
         nextContainer.innerHTML = `
             <div class="next-up-action">
                 <div class="stat-content">
-                    <span class="next-title" style="color: var(--success)">🎉 Course Finished!</span>
-                    <span class="next-topic">All lectures completed</span>
+                    <span class="next-title" style="color: var(--success)">🎉 Syllabus Complete!</span>
+                    <span class="next-topic">All modules completed</span>
                 </div>
             </div>
         `;
@@ -272,23 +368,51 @@ function updateDashboard() {
     updatePhaseStats();
 }
 
+// Generate phase progress bars dynamically based on active subject phase groupings
 function updatePhaseStats() {
-    const phases = ["Foundation", "Arithmetic", "Advanced Maths"];
+    const container = document.getElementById('phase-cards-container');
+    if (!container) return;
     
-    phases.forEach(phase => {
+    container.innerHTML = '';
+    
+    const phases = [];
+    lectures.forEach(l => {
+        if (!phases.includes(l.phase)) {
+            phases.push(l.phase);
+        }
+    });
+    
+    phases.forEach((phase, idx) => {
         const phaseLectures = lectures.filter(l => l.phase === phase);
         const total = phaseLectures.length;
         const completed = phaseLectures.filter(l => l.completed).length;
         const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
         
-        // Element IDs matching phase names (lowercased without spaces)
-        const elementPrefix = phase.toLowerCase().replace(/[^a-z]/g, '');
+        let gradient = 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+        if (currentSubject === 'gk') {
+            gradient = 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)';
+        } else if (currentSubject === 'reasoning') {
+            gradient = 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)';
+        } else if (currentSubject === 'english') {
+            gradient = 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)';
+        }
         
-        const countEl = document.getElementById(`${elementPrefix}-count`);
-        const fillEl = document.getElementById(`${elementPrefix}-fill`);
-        
-        if (countEl) countEl.textContent = `${completed}/${total} (${percent}%)`;
-        if (fillEl) fillEl.style.width = `${percent}%`;
+        const card = document.createElement('div');
+        card.className = 'phase-card';
+        card.innerHTML = `
+            <div class="phase-card-header">
+                <span class="phase-name">${phase}</span>
+                <span class="phase-badge foundation" style="background: rgba(99, 102, 241, 0.1); color: var(--primary); font-size:0.65rem;">Part ${idx + 1}</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${percent}%; background: ${gradient}"></div>
+            </div>
+            <div class="phase-stats">
+                <span>Topics Completed:</span>
+                <span style="font-weight:700; font-family: 'JetBrains Mono', monospace;">${completed}/${total} (${percent}%)</span>
+            </div>
+        `;
+        container.appendChild(card);
     });
 }
 
@@ -303,13 +427,11 @@ function calculateStreak() {
     
     const uniqueDates = [...new Set(dates)];
     
-    // Convert to Date objects ignoring timezones
     const dateObjs = uniqueDates.map(d => {
         const [year, month, day] = d.split('-').map(Number);
         return new Date(year, month - 1, day);
     });
     
-    // Sort descending (most recent first)
     dateObjs.sort((a, b) => b - a);
     
     const today = new Date();
@@ -320,7 +442,6 @@ function calculateStreak() {
     
     let latestCompletion = dateObjs[0];
     
-    // If the latest completion is older than yesterday, the streak is broken
     if (latestCompletion < yesterday) {
         return 0;
     }
@@ -336,7 +457,7 @@ function calculateStreak() {
             streak++;
             currentCheck = dateObjs[i];
         } else {
-            break; // Streak broken
+            break; 
         }
     }
     
@@ -386,16 +507,17 @@ function renderLectures() {
             <tr>
                 <td colspan="8">
                     <div class="empty-state">
-                        No lectures match the active filters or search criteria.
+                        No items match the active filters or search criteria.
                     </div>
                 </td>
             </tr>
         `;
-        document.getElementById('showing-count').textContent = `Showing 0 lectures`;
+        document.getElementById('showing-count').textContent = `Showing 0 items`;
         return;
     }
     
-    document.getElementById('showing-count').textContent = `Showing ${filtered.length} of ${lectures.length} lectures`;
+    const itemLabel = currentSubject === "maths" ? "lectures" : "topics";
+    document.getElementById('showing-count').textContent = `Showing ${filtered.length} of ${lectures.length} ${itemLabel}`;
     
     // Render Rows (dynamically generated for optimal speed)
     const fragment = document.createDocumentFragment();
@@ -407,6 +529,7 @@ function renderLectures() {
         
         // Class No & Phase Badge
         const classNoCell = document.createElement('td');
+        const countIndexPrefix = currentSubject === "maths" ? "Class" : "Item";
         classNoCell.innerHTML = `
             <div style="font-weight: 700; font-family: 'JetBrains Mono', monospace;">#${l.classNo}</div>
             <span class="phase-badge ${l.phase.toLowerCase().replace(/[^a-z]/g, '')}" style="font-size: 0.65rem; padding: 2px 5px;">${l.phase}</span>
@@ -503,7 +626,6 @@ function toggleComplete(id, completed) {
     
     lecture.completed = completed;
     if (completed) {
-        // Default to today if date Completed is empty
         if (!lecture.dateCompleted) {
             const today = new Date();
             const year = today.getFullYear();
@@ -512,7 +634,6 @@ function toggleComplete(id, completed) {
             lecture.dateCompleted = `${year}-${month}-${day}`;
         }
     } else {
-        // Reset revisions and completion date when uncompleted
         lecture.revision1 = false;
         lecture.revision2 = false;
         lecture.dateCompleted = "";
@@ -521,7 +642,6 @@ function toggleComplete(id, completed) {
     saveState();
     updateDashboard();
     
-    // Efficiently update just this row styling and state in DOM
     const tr = document.getElementById(`row-${id}`);
     if (tr) {
         if (completed) {
@@ -529,8 +649,6 @@ function toggleComplete(id, completed) {
         } else {
             tr.classList.remove('completed-row');
         }
-        
-        // Re-render this row to refresh inputs and bindings
         renderLectures();
     }
 }
@@ -542,10 +660,8 @@ function toggleRevision(id, revNumber) {
     
     if (revNumber === 1) {
         lecture.revision1 = !lecture.revision1;
-        // Unchecking R1 also unchecks R2
         if (!lecture.revision1) lecture.revision2 = false;
     } else if (revNumber === 2) {
-        // Can only check R2 if R1 is checked
         if (!lecture.revision1) {
             showToast("Complete Revision 1 first!", "warning");
             return;
@@ -638,11 +754,8 @@ function saveNotes() {
     lecture.dateCompleted = dateVal;
     lecture.notes = notesVal;
     
-    // Automatically toggle completed state if a completion date is selected
     if (dateVal && !lecture.completed) {
         lecture.completed = true;
-    } else if (!dateVal && lecture.completed) {
-        // Keep completed, just don't clear it. Users might clear dates without resetting.
     }
     
     saveState();
@@ -659,7 +772,6 @@ function showToast(message, type = "success") {
     
     toast.textContent = message;
     
-    // Set colors based on type
     if (type === "success") {
         toast.style.background = "var(--success-gradient)";
         toast.style.boxShadow = "0 10px 25px rgba(16, 185, 129, 0.3)";
@@ -691,6 +803,16 @@ function updateThemeIcon(theme) {
 
 // Bind all events
 function setupEventListeners() {
+    // Subject Tabs Navigation
+    document.querySelectorAll('.subj-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.subj-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            const subject = e.currentTarget.getAttribute('data-subject');
+            switchSubject(subject);
+        });
+    });
+
     // Theme Toggle
     document.getElementById('theme-toggle').addEventListener('click', () => {
         const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -706,26 +828,6 @@ function setupEventListeners() {
         renderLectures();
     });
     
-    // Phase Tabs
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            currentFilterPhase = e.currentTarget.getAttribute('data-phase');
-            renderLectures();
-        });
-    });
-    
-    // Status Pills
-    document.querySelectorAll('.pill-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            currentFilterStatus = e.currentTarget.getAttribute('data-status');
-            renderLectures();
-        });
-    });
-    
     // Topic Selector
     document.getElementById('topic-filter').addEventListener('change', (e) => {
         currentFilterTopic = e.target.value;
@@ -738,7 +840,7 @@ function setupEventListeners() {
     document.getElementById('drawer-cancel').addEventListener('click', closeNotesDrawer);
     document.getElementById('drawer-save').addEventListener('click', saveNotes);
     
-    // Export CSV
+    // Export CSV (Subject-specific download naming)
     document.getElementById('btn-export').addEventListener('click', () => {
         try {
             const csvContent = stateToCSV(lectures);
@@ -746,18 +848,18 @@ function setupEventListeners() {
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", "SSC_Maths_Notion_Import.csv");
+            link.setAttribute("download", `SSC_${currentSubject.toUpperCase()}_Notion_Import.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showToast("CSV Exported successfully!");
+            showToast(`${currentSubject.toUpperCase()} CSV Exported!`);
         } catch (e) {
             console.error(e);
             showToast("Export failed!", "warning");
         }
     });
     
-    // Import CSV File Selector
+    // Import CSV File Selector (Imports into active subject)
     document.getElementById('csv-file-picker').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -773,14 +875,12 @@ function setupEventListeners() {
                     return;
                 }
                 
-                // Validate columns
                 const headers = parsed[0].map(h => h.trim().toLowerCase());
                 if (!headers.includes("lecture") || !headers.includes("phase") || !headers.includes("topic")) {
                     showToast("Invalid CSV structure. Missing columns!", "warning");
                     return;
                 }
                 
-                // Map columns
                 const lectureIdx = headers.indexOf("lecture");
                 const phaseIdx = headers.indexOf("phase");
                 const topicIdx = headers.indexOf("topic");
@@ -813,10 +913,11 @@ function setupEventListeners() {
                     });
                 
                 saveState();
+                populatePhaseTabs();
                 populateTopicFilter();
                 updateDashboard();
                 renderLectures();
-                showToast("CSV imported and merged successfully!");
+                showToast(`CSV imported into ${currentSubject.toUpperCase()} successfully!`);
             } catch (err) {
                 console.error(err);
                 showToast("Failed to parse CSV!", "warning");
@@ -825,15 +926,17 @@ function setupEventListeners() {
         reader.readAsText(file);
     });
     
-    // Reset defaults button
+    // Reset defaults button (Resets active subject)
     document.getElementById('btn-reset').addEventListener('click', () => {
-        if (confirm("Are you sure you want to reset all progress to defaults? This will erase current updates!")) {
-            localStorage.removeItem('ssc_maths_progress');
+        if (confirm(`Reset all progress for ${currentSubject.toUpperCase()} to defaults?`)) {
+            const key = `ssc_${currentSubject}_progress`;
+            localStorage.removeItem(key);
             loadState();
+            populatePhaseTabs();
             populateTopicFilter();
             updateDashboard();
             renderLectures();
-            showToast("Reset completed!");
+            showToast(`${currentSubject.toUpperCase()} Reset completed!`);
         }
     });
 
@@ -855,7 +958,6 @@ function loadCloudSettingsState() {
     githubToken = localStorage.getItem('ssc_maths_github_token') || '';
     gistId = localStorage.getItem('ssc_maths_gist_id') || '';
     
-    // Set initial values in inputs
     document.getElementById('cloud-token').value = githubToken;
     document.getElementById('cloud-gist-id').value = gistId;
     
@@ -912,7 +1014,6 @@ function updateSyncStatus(status) {
     
     if (!btn || !icon || !text) return;
     
-    // Clean classes
     btn.classList.remove('btn-cloud-synced', 'btn-cloud-syncing', 'btn-cloud-error');
     icon.classList.remove('syncing-spin');
     
@@ -930,7 +1031,6 @@ function updateSyncStatus(status) {
         text.textContent = "Sync Error";
         icon.textContent = "⚠️";
     } else {
-        // 'local' / offline
         text.textContent = "Cloud Sync";
         icon.textContent = "☁️";
     }
@@ -948,7 +1048,7 @@ function updateSyncControls() {
     }
 }
 
-// Create new secret Gist on behalf of the user
+// Create new secret Gist containing files for all four subjects
 async function createCloudGist() {
     const inputToken = document.getElementById('cloud-token').value.trim();
     if (!inputToken) {
@@ -956,35 +1056,60 @@ async function createCloudGist() {
         return;
     }
     
-    // Temporarily apply token to state for the request
     githubToken = inputToken;
     updateSyncStatus('syncing');
     
     try {
-        const csvContent = stateToCSV(lectures);
+        const getSubjectCSV = (subject) => {
+            if (subject === currentSubject) {
+                return stateToCSV(lectures);
+            }
+            const saved = localStorage.getItem(`ssc_${subject}_progress`);
+            if (saved) {
+                try {
+                    return stateToCSV(JSON.parse(saved));
+                } catch (e) {}
+            }
+            
+            let rawData = '';
+            if (subject === 'maths') rawData = typeof defaultCsvData !== 'undefined' ? defaultCsvData : '';
+            else if (subject === 'gk') rawData = typeof defaultGkCsv !== 'undefined' ? defaultGkCsv : '';
+            else if (subject === 'reasoning') rawData = typeof defaultReasoningCsv !== 'undefined' ? defaultReasoningCsv : '';
+            else if (subject === 'english') rawData = typeof defaultEnglishCsv !== 'undefined' ? defaultEnglishCsv : '';
+            
+            const parsed = parseCSV(rawData);
+            const dummy = parsed.slice(1).map((row, idx) => ({
+                lecture: row[0], phase: row[1], topic: row[2], classNo: parseInt(row[3])||0,
+                completed: false, revision1: false, revision2: false, questionsSolved: 0,
+                weakTopic: false, dateCompleted: "", notes: ""
+            }));
+            return stateToCSV(dummy);
+        };
+        
         const body = {
-            description: "SSC Maths Prep Progress Tracker Backup",
+            description: "SSC Study Tracker Progress Multi-Subject Backup",
             public: false,
             files: {
-                "SSC_Maths_Notion_Import.csv": {
-                    "content": csvContent
-                }
+                "SSC_Maths_Notion_Import.csv": { "content": getSubjectCSV('maths') },
+                "SSC_GK_Notion_Import.csv": { "content": getSubjectCSV('gk') },
+                "SSC_Reasoning_Notion_Import.csv": { "content": getSubjectCSV('reasoning') },
+                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') }
             }
         };
+        
         const result = await githubRequest('POST', '/gists', body);
         gistId = result.id;
         
-        // Save successfully
         localStorage.setItem('ssc_maths_github_token', githubToken);
         localStorage.setItem('ssc_maths_gist_id', gistId);
         document.getElementById('cloud-gist-id').value = gistId;
         
         updateSyncStatus('synced');
         updateSyncControls();
-        showToast("Cloud Gist created successfully!");
+        showToast("Cloud Gist initialized with all subjects!");
     } catch (err) {
         console.error(err);
-        githubToken = localStorage.getItem('ssc_maths_github_token') || ''; // revert state
+        githubToken = localStorage.getItem('ssc_maths_github_token') || ''; 
         updateSyncStatus('error');
         showToast("Gist creation failed: " + err.message, "warning");
     }
@@ -1005,13 +1130,14 @@ async function linkCloudGist() {
     updateSyncStatus('syncing');
     
     try {
-        // Validate Gist ID is valid and contains our file
         const result = await githubRequest('GET', `/gists/${gistId}`);
-        const file = result.files["SSC_Maths_Notion_Import.csv"];
+        const hasAnyFile = result.files["SSC_Maths_Notion_Import.csv"] || 
+                           result.files["SSC_GK_Notion_Import.csv"] || 
+                           result.files["SSC_Reasoning_Notion_Import.csv"] || 
+                           result.files["SSC_English_Notion_Import.csv"];
         
-        if (!file) {
-            // File does not exist yet. Ask user if we should push to it.
-            if (confirm("Gist found, but it doesn't contain progress data. Link and upload current local progress to it?")) {
+        if (!hasAnyFile) {
+            if (confirm("Linked Gist found, but it doesn't contain tracker files. Initialize and upload current local progress?")) {
                 localStorage.setItem('ssc_maths_github_token', githubToken);
                 localStorage.setItem('ssc_maths_gist_id', gistId);
                 updateSyncControls();
@@ -1024,12 +1150,11 @@ async function linkCloudGist() {
             return;
         }
         
-        // Gist exists and has file. Link successfully.
         localStorage.setItem('ssc_maths_github_token', githubToken);
         localStorage.setItem('ssc_maths_gist_id', gistId);
         updateSyncStatus('synced');
         updateSyncControls();
-        showToast("Gist linked successfully!");
+        showToast("Cloud Gist linked successfully!");
     } catch (err) {
         console.error(err);
         githubToken = localStorage.getItem('ssc_maths_github_token') || '';
@@ -1039,62 +1164,70 @@ async function linkCloudGist() {
     }
 }
 
-// Pull latest data from Cloud (Gist -> local)
+// Pull latest data from Cloud (Gist -> local) for all subjects
 async function pullFromCloud() {
     if (!gistId || !githubToken) return;
     updateSyncStatus('syncing');
     try {
         const result = await githubRequest('GET', `/gists/${gistId}`);
-        const file = result.files["SSC_Maths_Notion_Import.csv"];
-        if (!file) {
-            throw new Error("'SSC_Maths_Notion_Import.csv' file not found in Gist");
-        }
         
-        const csvContent = file.content;
-        const parsed = parseCSV(csvContent);
-        if (parsed.length <= 1) {
-            throw new Error("Gist content empty");
-        }
-        
-        // Parse columns
-        const headers = parsed[0].map(h => h.trim().toLowerCase());
-        const lectureIdx = headers.indexOf("lecture");
-        const phaseIdx = headers.indexOf("phase");
-        const topicIdx = headers.indexOf("topic");
-        const classNoIdx = headers.indexOf("class no");
-        const completedIdx = headers.indexOf("completed");
-        const rev1Idx = headers.indexOf("revision 1");
-        const rev2Idx = headers.indexOf("revision 2");
-        const questionsIdx = headers.indexOf("questions solved");
-        const weakIdx = headers.indexOf("weak topic");
-        const dateIdx = headers.indexOf("date completed");
-        const notesIdx = headers.indexOf("notes");
-        
-        lectures = parsed.slice(1)
-            .filter(row => row.length >= 4 && row[lectureIdx].trim() !== "")
-            .map((row, idx) => {
-                return {
-                    id: idx,
-                    lecture: row[lectureIdx],
-                    phase: row[phaseIdx],
-                    topic: row[topicIdx],
-                    classNo: classNoIdx !== -1 ? parseInt(row[classNoIdx]) || 0 : 0,
-                    completed: completedIdx !== -1 ? (row[completedIdx] === 'True' || row[completedIdx] === 'true' || row[completedIdx] === '1') : false,
-                    revision1: rev1Idx !== -1 ? (row[rev1Idx] === 'True' || row[rev1Idx] === 'true' || row[rev1Idx] === '1') : false,
-                    revision2: rev2Idx !== -1 ? (row[rev2Idx] === 'True' || row[rev2Idx] === 'true' || row[rev2Idx] === '1') : false,
-                    questionsSolved: (questionsIdx !== -1 && row[questionsIdx]) ? parseInt(row[questionsIdx]) || 0 : 0,
-                    weakTopic: weakIdx !== -1 ? (row[weakIdx] === 'True' || row[weakIdx] === 'true' || row[weakIdx] === '1') : false,
-                    dateCompleted: dateIdx !== -1 ? row[dateIdx] : "",
-                    notes: notesIdx !== -1 ? row[notesIdx] : ""
-                };
-            });
+        const pullSubject = (subject, filename) => {
+            const file = result.files[filename];
+            if (!file) return;
             
-        saveState();
+            const csvContent = file.content;
+            const parsed = parseCSV(csvContent);
+            if (parsed.length <= 1) return;
+            
+            const headers = parsed[0].map(h => h.trim().toLowerCase());
+            const lectureIdx = headers.indexOf("lecture");
+            const phaseIdx = headers.indexOf("phase");
+            const topicIdx = headers.indexOf("topic");
+            const classNoIdx = headers.indexOf("class no");
+            const completedIdx = headers.indexOf("completed");
+            const rev1Idx = headers.indexOf("revision 1");
+            const rev2Idx = headers.indexOf("revision 2");
+            const questionsIdx = headers.indexOf("questions solved");
+            const weakIdx = headers.indexOf("weak topic");
+            const dateIdx = headers.indexOf("date completed");
+            const notesIdx = headers.indexOf("notes");
+            
+            const parsedLectures = parsed.slice(1)
+                .filter(row => row.length >= 4 && row[lectureIdx].trim() !== "")
+                .map((row, idx) => {
+                    return {
+                        id: idx,
+                        lecture: row[lectureIdx],
+                        phase: row[phaseIdx],
+                        topic: row[topicIdx],
+                        classNo: classNoIdx !== -1 ? parseInt(row[classNoIdx]) || 0 : 0,
+                        completed: completedIdx !== -1 ? (row[completedIdx] === 'True' || row[completedIdx] === 'true' || row[completedIdx] === '1') : false,
+                        revision1: rev1Idx !== -1 ? (row[rev1Idx] === 'True' || row[rev1Idx] === 'true' || row[rev1Idx] === '1') : false,
+                        revision2: rev2Idx !== -1 ? (row[rev2Idx] === 'True' || row[rev2Idx] === 'true' || row[rev2Idx] === '1') : false,
+                        questionsSolved: (questionsIdx !== -1 && row[questionsIdx]) ? parseInt(row[questionsIdx]) || 0 : 0,
+                        weakTopic: weakIdx !== -1 ? (row[weakIdx] === 'True' || row[weakIdx] === 'true' || row[weakIdx] === '1') : false,
+                        dateCompleted: dateIdx !== -1 ? row[dateIdx] : "",
+                        notes: notesIdx !== -1 ? row[notesIdx] : ""
+                    };
+                });
+            
+            localStorage.setItem(`ssc_${subject}_progress`, JSON.stringify(parsedLectures));
+            if (subject === currentSubject) {
+                lectures = parsedLectures;
+            }
+        };
+        
+        pullSubject('maths', 'SSC_Maths_Notion_Import.csv');
+        pullSubject('gk', 'SSC_GK_Notion_Import.csv');
+        pullSubject('reasoning', 'SSC_Reasoning_Notion_Import.csv');
+        pullSubject('english', 'SSC_English_Notion_Import.csv');
+        
+        populatePhaseTabs();
         populateTopicFilter();
         updateDashboard();
         renderLectures();
         updateSyncStatus('synced');
-        showToast("Pulled latest data from Cloud!");
+        showToast("All subjects pulled from Cloud!");
     } catch (err) {
         console.error(err);
         updateSyncStatus('error');
@@ -1102,22 +1235,49 @@ async function pullFromCloud() {
     }
 }
 
-// Push local data to Cloud (local -> Gist)
+// Push local data to Cloud (local -> Gist) for all subjects
 async function pushToCloud(isAuto = false) {
     if (!gistId || !githubToken) return;
     updateSyncStatus('syncing');
     try {
-        const csvContent = stateToCSV(lectures);
+        const getSubjectCSV = (subject) => {
+            if (subject === currentSubject) {
+                return stateToCSV(lectures);
+            }
+            const saved = localStorage.getItem(`ssc_${subject}_progress`);
+            if (saved) {
+                try {
+                    return stateToCSV(JSON.parse(saved));
+                } catch (e) {}
+            }
+            
+            let rawData = '';
+            if (subject === 'maths') rawData = typeof defaultCsvData !== 'undefined' ? defaultCsvData : '';
+            else if (subject === 'gk') rawData = typeof defaultGkCsv !== 'undefined' ? defaultGkCsv : '';
+            else if (subject === 'reasoning') rawData = typeof defaultReasoningCsv !== 'undefined' ? defaultReasoningCsv : '';
+            else if (subject === 'english') rawData = typeof defaultEnglishCsv !== 'undefined' ? defaultEnglishCsv : '';
+            
+            const parsed = parseCSV(rawData);
+            const dummy = parsed.slice(1).map((row, idx) => ({
+                lecture: row[0], phase: row[1], topic: row[2], classNo: parseInt(row[3])||0,
+                completed: false, revision1: false, revision2: false, questionsSolved: 0,
+                weakTopic: false, dateCompleted: "", notes: ""
+            }));
+            return stateToCSV(dummy);
+        };
+        
         const body = {
             files: {
-                "SSC_Maths_Notion_Import.csv": {
-                    "content": csvContent
-                }
+                "SSC_Maths_Notion_Import.csv": { "content": getSubjectCSV('maths') },
+                "SSC_GK_Notion_Import.csv": { "content": getSubjectCSV('gk') },
+                "SSC_Reasoning_Notion_Import.csv": { "content": getSubjectCSV('reasoning') },
+                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') }
             }
         };
+        
         await githubRequest('PATCH', `/gists/${gistId}`, body);
         updateSyncStatus('synced');
-        if (!isAuto) showToast("Pushed data to Cloud backup!");
+        if (!isAuto) showToast("All progress synced to Cloud Gist!");
     } catch (err) {
         console.error(err);
         updateSyncStatus('error');

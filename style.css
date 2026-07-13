@@ -1153,3 +1153,63 @@ tr.completed-row td {
     background: rgba(239, 68, 68, 0.06) !important;
     color: var(--danger) !important;
 }
+
+/* Subject Selector Tabs & Dynamic Accents */
+.subject-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    margin-bottom: 4px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.subj-btn {
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all var(--transition-fast);
+}
+
+.subj-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] .subj-btn:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.subj-btn.active {
+    background: var(--primary-gradient);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Subject color overrides */
+[data-subject="gk"] {
+    --primary: #0ea5e9;
+    --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+    --primary-glow: rgba(14, 165, 233, 0.35);
+}
+
+[data-subject="reasoning"] {
+    --primary: #a855f7;
+    --primary-gradient: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    --primary-glow: rgba(168, 85, 247, 0.35);
+}
+
+[data-subject="english"] {
+    --primary: #ec4899;
+    --primary-gradient: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    --primary-glow: rgba(236, 72, 153, 0.35);
+}
