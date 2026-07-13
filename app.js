@@ -84,6 +84,9 @@ let syncTimeout = null;
 
 // Initialize App
 window.addEventListener('DOMContentLoaded', () => {
+    // Check for daily resets first
+    checkDailyReset();
+
     // Theme setup
     const savedTheme = localStorage.getItem('ssc_maths_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -119,6 +122,72 @@ window.addEventListener('DOMContentLoaded', () => {
         pullFromCloud();
     }
 });
+
+// Run daily reset validation whenever tab gains focus
+window.addEventListener('focus', checkDailyReset);
+
+// Check and execute auto-reset for Daily Tasks at 4:00 AM
+function checkDailyReset() {
+    const now = new Date();
+    
+    // Get the current daily cycle boundary (4:00 AM)
+    const boundaryToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0, 0);
+    let currentCycleStart;
+    
+    if (now >= boundaryToday) {
+        currentCycleStart = boundaryToday;
+    } else {
+        currentCycleStart = new Date(boundaryToday);
+        currentCycleStart.setDate(currentCycleStart.getDate() - 1);
+    }
+    
+    const lastResetKey = 'ssc_daily_last_reset';
+    const lastResetVal = localStorage.getItem(lastResetKey);
+    const lastResetTime = lastResetVal ? parseInt(lastResetVal) : 0;
+    
+    // If the last reset was before the start of the current cycle, we need to reset!
+    if (lastResetTime < currentCycleStart.getTime()) {
+        const dailyKey = 'ssc_daily_progress';
+        const saved = localStorage.getItem(dailyKey);
+        
+        if (saved) {
+            try {
+                let dailyLectures = JSON.parse(saved);
+                dailyLectures = dailyLectures.map(l => ({
+                    ...l,
+                    completed: false,
+                    revision1: false,
+                    revision2: false,
+                    questionsSolved: 0,
+                    dateCompleted: ""
+                }));
+                localStorage.setItem(dailyKey, JSON.stringify(dailyLectures));
+                
+                // If we are currently viewing the daily tab, reload the state
+                if (currentSubject === 'daily') {
+                    lectures = dailyLectures;
+                    updateDashboard();
+                    renderLectures();
+                }
+                
+                // Save the reset timestamp
+                localStorage.setItem(lastResetKey, now.getTime().toString());
+                
+                // Silently push the reset state to Gist sync if active
+                if (gistId && githubToken) {
+                    pushToCloud(true);
+                }
+                
+                console.log("Daily Tasks reset successfully at 4:00 AM boundary.");
+            } catch (e) {
+                console.error("Failed to execute daily auto-reset:", e);
+            }
+        } else {
+            // First time seeding daily reset timestamp
+            localStorage.setItem(lastResetKey, now.getTime().toString());
+        }
+    }
+}
 
 // Load progress state from localStorage or default CSV
 function loadState() {
