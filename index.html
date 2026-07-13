@@ -95,6 +95,15 @@
                     <div class="revision-progress-list">
                         <div class="revision-progress-item">
                             <div class="revision-progress-header">
+                                <span>Notes Made</span>
+                                <span id="notes-stats-label">0/0</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div id="notes-progress-fill" class="progress-bar-fill info"></div>
+                            </div>
+                        </div>
+                        <div class="revision-progress-item">
+                            <div class="revision-progress-header">
                                 <span>Revision 1</span>
                                 <span id="rev1-stats-label">0/0</span>
                             </div>
@@ -187,6 +196,7 @@
                 <button class="pill-btn active" data-status="All">All Lectures</button>
                 <button class="pill-btn" data-status="Completed">Completed</button>
                 <button class="pill-btn" data-status="Pending">Pending</button>
+                <button class="pill-btn" data-status="NotesPending">Notes Pending</button>
                 <button class="pill-btn" data-status="Rev1">R1 Pending</button>
                 <button class="pill-btn" data-status="Rev2">R2 Pending</button>
                 <button class="pill-btn" data-status="Weak">Weak Topics</button>
@@ -203,6 +213,7 @@
                             <th>Lecture Details</th>
                             <th style="width: 180px;">Topic</th>
                             <th style="width: 80px;">Complete</th>
+                            <th style="width: 100px;">Notes Made</th>
                             <th style="width: 100px;">Revisions</th>
                             <th style="width: 130px;">Qns Solved</th>
                             <th style="width: 70px;">Weak</th>
@@ -212,7 +223,7 @@
                     <tbody id="lectures-list">
                         <!-- Filled dynamically by JavaScript -->
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <div style="text-align: center; padding: 40px; color: var(--text-muted);">
                                     Parsing course lectures database...
                                 </div>

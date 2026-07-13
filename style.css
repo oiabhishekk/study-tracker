@@ -411,6 +411,10 @@ header {
     background: var(--success-gradient);
 }
 
+.progress-bar-fill.info {
+    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+}
+
 /* Next Up Card Action */
 .next-up-action {
     display: flex;

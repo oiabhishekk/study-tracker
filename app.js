@@ -35,7 +35,7 @@ function parseCSV(text) {
 function stateToCSV(lecturesList) {
     const headers = [
         "Lecture", "Phase", "Topic", "Class No", "Completed",
-        "Revision 1", "Revision 2", "Questions Solved", "Weak Topic",
+        "Notes making", "Revision 1", "Revision 2", "Questions Solved", "Weak Topic",
         "Date Completed", "Notes"
     ];
 
@@ -55,6 +55,7 @@ function stateToCSV(lecturesList) {
             escape(l.topic),
             l.classNo,
             l.completed ? "True" : "False",
+            l.notesMaking ? "True" : "False",
             l.revision1 ? "True" : "False",
             l.revision2 ? "True" : "False",
             l.questionsSolved !== null ? l.questionsSolved : '',
@@ -171,12 +172,13 @@ function loadDefaults() {
                 topic: row[2],
                 classNo: parseInt(row[3]) || 0,
                 completed: row[4] === 'True',
-                revision1: row[5] === 'True',
-                revision2: row[6] === 'True',
-                questionsSolved: row[7] ? parseInt(row[7]) || 0 : 0,
-                weakTopic: row[8] === 'True',
-                dateCompleted: row[9] || "",
-                notes: row[10] || ""
+                notesMaking: row[5] === 'True',
+                revision1: row[6] === 'True',
+                revision2: row[7] === 'True',
+                questionsSolved: row[8] ? parseInt(row[8]) || 0 : 0,
+                weakTopic: row[9] === 'True',
+                dateCompleted: row[10] || "",
+                notes: row[11] || ""
             };
         });
 
@@ -289,9 +291,11 @@ function updateDashboard() {
     const completed = lectures.filter(l => l.completed).length;
     const progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    // Revisions
+    // Notes and Revisions
+    const notesMade = lectures.filter(l => l.notesMaking).length;
     const rev1 = lectures.filter(l => l.revision1).length;
     const rev2 = lectures.filter(l => l.revision2).length;
+    const notesPercent = completed > 0 ? Math.round((notesMade / completed) * 100) : 0;
     const rev1Percent = completed > 0 ? Math.round((rev1 / completed) * 100) : 0;
     const rev2Percent = completed > 0 ? Math.round((rev2 / completed) * 100) : 0;
 
@@ -319,7 +323,9 @@ function updateDashboard() {
         circle.style.strokeDashoffset = offset;
     }
 
-    // Update Revisions Progress
+    // Update Revisions/Notes Progress
+    document.getElementById('notes-stats-label').textContent = `${notesMade}/${completed}`;
+    document.getElementById('notes-progress-fill').style.width = `${notesPercent}%`;
     document.getElementById('rev1-stats-label').textContent = `${rev1}/${completed}`;
     document.getElementById('rev1-progress-fill').style.width = `${rev1Percent}%`;
     document.getElementById('rev2-stats-label').textContent = `${rev2}/${completed}`;
@@ -490,6 +496,8 @@ function renderLectures() {
             matchesStatus = l.completed;
         } else if (currentFilterStatus === "Pending") {
             matchesStatus = !l.completed;
+        } else if (currentFilterStatus === "NotesPending") {
+            matchesStatus = l.completed && !l.notesMaking;
         } else if (currentFilterStatus === "Rev1") {
             matchesStatus = l.completed && !l.revision1;
         } else if (currentFilterStatus === "Rev2") {
@@ -504,7 +512,7 @@ function renderLectures() {
     if (filtered.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8">
+                <td colspan="9">
                     <div class="empty-state">
                         No items match the active filters or search criteria.
                     </div>
@@ -555,6 +563,17 @@ function renderLectures() {
             </label>
         `;
         tr.appendChild(statusCell);
+
+        // Notes making toggle
+        const notesMakingCell = document.createElement('td');
+        const notesMakingDisabled = !l.completed ? 'style="opacity: 0.4; pointer-events: none;"' : '';
+        notesMakingCell.innerHTML = `
+            <label class="toggle-switch" ${notesMakingDisabled}>
+                <input type="checkbox" ${l.notesMaking ? 'checked' : ''} onchange="toggleNotesMaking(${l.id}, this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        `;
+        tr.appendChild(notesMakingCell);
 
         // Revisions Checkboxes
         const revCell = document.createElement('td');
@@ -633,6 +652,7 @@ function toggleComplete(id, completed) {
             lecture.dateCompleted = `${year}-${month}-${day}`;
         }
     } else {
+        lecture.notesMaking = false;
         lecture.revision1 = false;
         lecture.revision2 = false;
         lecture.dateCompleted = "";
@@ -650,6 +670,17 @@ function toggleComplete(id, completed) {
         }
         renderLectures();
     }
+}
+
+// Toggle Notes Making Checkbox
+function toggleNotesMaking(id, notesMaking) {
+    const lecture = lectures.find(l => l.id === id);
+    if (!lecture || !lecture.completed) return;
+
+    lecture.notesMaking = notesMaking;
+    saveState();
+    updateDashboard();
+    renderLectures();
 }
 
 // Toggle Revision R1 or R2
@@ -895,6 +926,7 @@ function setupEventListeners() {
                 const topicIdx = headers.indexOf("topic");
                 const classNoIdx = headers.indexOf("class no");
                 const completedIdx = headers.indexOf("completed");
+                const notesMakingIdx = headers.indexOf("notes making");
                 const rev1Idx = headers.indexOf("revision 1");
                 const rev2Idx = headers.indexOf("revision 2");
                 const questionsIdx = headers.indexOf("questions solved");
@@ -912,6 +944,7 @@ function setupEventListeners() {
                             topic: row[topicIdx],
                             classNo: classNoIdx !== -1 ? parseInt(row[classNoIdx]) || 0 : 0,
                             completed: completedIdx !== -1 ? (row[completedIdx] === 'True' || row[completedIdx] === 'true' || row[completedIdx] === '1') : false,
+                            notesMaking: notesMakingIdx !== -1 ? (row[notesMakingIdx] === 'True' || row[notesMakingIdx] === 'true' || row[notesMakingIdx] === '1') : false,
                             revision1: rev1Idx !== -1 ? (row[rev1Idx] === 'True' || row[rev1Idx] === 'true' || row[rev1Idx] === '1') : false,
                             revision2: rev2Idx !== -1 ? (row[rev2Idx] === 'True' || row[rev2Idx] === 'true' || row[rev2Idx] === '1') : false,
                             questionsSolved: (questionsIdx !== -1 && row[questionsIdx]) ? parseInt(row[questionsIdx]) || 0 : 0,
@@ -1092,7 +1125,7 @@ async function createCloudGist() {
             const parsed = parseCSV(rawData);
             const dummy = parsed.slice(1).map((row, idx) => ({
                 lecture: row[0], phase: row[1], topic: row[2], classNo: parseInt(row[3]) || 0,
-                completed: false, revision1: false, revision2: false, questionsSolved: 0,
+                completed: false, notesMaking: false, revision1: false, revision2: false, questionsSolved: 0,
                 weakTopic: false, dateCompleted: "", notes: ""
             }));
             return stateToCSV(dummy);
@@ -1197,6 +1230,7 @@ async function pullFromCloud() {
             const topicIdx = headers.indexOf("topic");
             const classNoIdx = headers.indexOf("class no");
             const completedIdx = headers.indexOf("completed");
+            const notesMakingIdx = headers.indexOf("notes making");
             const rev1Idx = headers.indexOf("revision 1");
             const rev2Idx = headers.indexOf("revision 2");
             const questionsIdx = headers.indexOf("questions solved");
@@ -1214,6 +1248,7 @@ async function pullFromCloud() {
                         topic: row[topicIdx],
                         classNo: classNoIdx !== -1 ? parseInt(row[classNoIdx]) || 0 : 0,
                         completed: completedIdx !== -1 ? (row[completedIdx] === 'True' || row[completedIdx] === 'true' || row[completedIdx] === '1') : false,
+                        notesMaking: notesMakingIdx !== -1 ? (row[notesMakingIdx] === 'True' || row[notesMakingIdx] === 'true' || row[notesMakingIdx] === '1') : false,
                         revision1: rev1Idx !== -1 ? (row[rev1Idx] === 'True' || row[rev1Idx] === 'true' || row[rev1Idx] === '1') : false,
                         revision2: rev2Idx !== -1 ? (row[rev2Idx] === 'True' || row[rev2Idx] === 'true' || row[rev2Idx] === '1') : false,
                         questionsSolved: (questionsIdx !== -1 && row[questionsIdx]) ? parseInt(row[questionsIdx]) || 0 : 0,
@@ -1272,7 +1307,7 @@ async function pushToCloud(isAuto = false) {
             const parsed = parseCSV(rawData);
             const dummy = parsed.slice(1).map((row, idx) => ({
                 lecture: row[0], phase: row[1], topic: row[2], classNo: parseInt(row[3]) || 0,
-                completed: false, revision1: false, revision2: false, questionsSolved: 0,
+                completed: false, notesMaking: false, revision1: false, revision2: false, questionsSolved: 0,
                 weakTopic: false, dateCompleted: "", notes: ""
             }));
             return stateToCSV(dummy);
