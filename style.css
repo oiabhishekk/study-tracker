@@ -1258,6 +1258,12 @@ tr.completed-row td {
     --primary-glow: rgba(236, 72, 153, 0.35);
 }
 
+[data-subject="daily"] {
+    --primary: #10b981;
+    --primary-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --primary-glow: rgba(16, 185, 129, 0.35);
+}
+
 /* Search Bar & Dropdown alignment group */
 .search-filter-group {
     display: flex;

@@ -147,6 +147,8 @@ function loadDefaults() {
         rawData = typeof defaultReasoningCsv !== 'undefined' ? defaultReasoningCsv : '';
     } else if (currentSubject === 'english') {
         rawData = typeof defaultEnglishCsv !== 'undefined' ? defaultEnglishCsv : '';
+    } else if (currentSubject === 'daily') {
+        rawData = typeof defaultDailyCsv !== 'undefined' ? defaultDailyCsv : '';
     }
     
     if (!rawData) {
@@ -217,6 +219,10 @@ function switchSubject(subject) {
         if (titleEl) titleEl.textContent = "English Language Syllabus";
         if (descEl) descEl.textContent = "Grammar rules, vocabulary lists, and comprehensions";
         if (nextLabel) nextLabel.textContent = "Next Topic";
+    } else if (subject === 'daily') {
+        if (titleEl) titleEl.textContent = "Daily Study Planner";
+        if (descEl) descEl.textContent = "Mark off mock tests, vocab revisions, and daily practice lists";
+        if (nextLabel) nextLabel.textContent = "Next Task";
     }
     
     // Reset filters
@@ -395,6 +401,8 @@ function updatePhaseStats() {
             gradient = 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)';
         } else if (currentSubject === 'english') {
             gradient = 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)';
+        } else if (currentSubject === 'daily') {
+            gradient = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
         }
         
         const card = document.createElement('div');
@@ -1089,6 +1097,7 @@ async function createCloudGist() {
             else if (subject === 'gk') rawData = typeof defaultGkCsv !== 'undefined' ? defaultGkCsv : '';
             else if (subject === 'reasoning') rawData = typeof defaultReasoningCsv !== 'undefined' ? defaultReasoningCsv : '';
             else if (subject === 'english') rawData = typeof defaultEnglishCsv !== 'undefined' ? defaultEnglishCsv : '';
+            else if (subject === 'daily') rawData = typeof defaultDailyCsv !== 'undefined' ? defaultDailyCsv : '';
             
             const parsed = parseCSV(rawData);
             const dummy = parsed.slice(1).map((row, idx) => ({
@@ -1106,7 +1115,8 @@ async function createCloudGist() {
                 "SSC_Maths_Notion_Import.csv": { "content": getSubjectCSV('maths') },
                 "SSC_GK_Notion_Import.csv": { "content": getSubjectCSV('gk') },
                 "SSC_Reasoning_Notion_Import.csv": { "content": getSubjectCSV('reasoning') },
-                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') }
+                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') },
+                "SSC_Daily_Notion_Import.csv": { "content": getSubjectCSV('daily') }
             }
         };
         
@@ -1234,6 +1244,7 @@ async function pullFromCloud() {
         pullSubject('gk', 'SSC_GK_Notion_Import.csv');
         pullSubject('reasoning', 'SSC_Reasoning_Notion_Import.csv');
         pullSubject('english', 'SSC_English_Notion_Import.csv');
+        pullSubject('daily', 'SSC_Daily_Notion_Import.csv');
         
         populatePhaseTabs();
         populateTopicFilter();
@@ -1269,6 +1280,7 @@ async function pushToCloud(isAuto = false) {
             else if (subject === 'gk') rawData = typeof defaultGkCsv !== 'undefined' ? defaultGkCsv : '';
             else if (subject === 'reasoning') rawData = typeof defaultReasoningCsv !== 'undefined' ? defaultReasoningCsv : '';
             else if (subject === 'english') rawData = typeof defaultEnglishCsv !== 'undefined' ? defaultEnglishCsv : '';
+            else if (subject === 'daily') rawData = typeof defaultDailyCsv !== 'undefined' ? defaultDailyCsv : '';
             
             const parsed = parseCSV(rawData);
             const dummy = parsed.slice(1).map((row, idx) => ({
@@ -1284,7 +1296,8 @@ async function pushToCloud(isAuto = false) {
                 "SSC_Maths_Notion_Import.csv": { "content": getSubjectCSV('maths') },
                 "SSC_GK_Notion_Import.csv": { "content": getSubjectCSV('gk') },
                 "SSC_Reasoning_Notion_Import.csv": { "content": getSubjectCSV('reasoning') },
-                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') }
+                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') },
+                "SSC_Daily_Notion_Import.csv": { "content": getSubjectCSV('daily') }
             }
         };
         
