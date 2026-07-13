@@ -8,7 +8,7 @@ Featuring visual dashboard analytics, a local-first architecture, CSV Import/Exp
 
 ## 🚀 Getting Started
 
-Simply open `https://oiabhishekk.github.io/study-tracker/` in any web browser to get started immediately. Your progress is saved automatically on your browser (`localStorage`).
+Simply open `https://oiabhishekk.github.io/study-tracker/` or local `index.html` in any web browser to get started immediately. Your progress is saved automatically on your browser (`localStorage`).
 
 To keep this synced across devices, follow this process:
 1. Click the **Cloud Sync** button (with the cloud icon ☁️) in the top-right header.
