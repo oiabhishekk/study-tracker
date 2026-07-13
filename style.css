@@ -1229,3 +1229,38 @@ tr.completed-row td {
     --primary-gradient: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
     --primary-glow: rgba(236, 72, 153, 0.35);
 }
+
+/* Search Bar & Dropdown alignment group */
+.search-filter-group {
+    display: flex;
+    gap: 12px;
+    flex: 1 1 400px;
+    max-width: 600px;
+    align-items: center;
+}
+
+.search-filter-group .search-wrapper {
+    flex: 2;
+    max-width: none;
+}
+
+.search-filter-group .filter-selects {
+    flex: 1;
+    min-width: 140px;
+}
+
+.search-filter-group select {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+@media (max-width: 576px) {
+    .search-filter-group {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        max-width: none;
+    }
+}

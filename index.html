@@ -142,13 +142,23 @@
 
         <!-- Filter & Search Controls Bar -->
         <div class="glass-panel controls-panel">
-            <!-- Search -->
-            <div class="search-wrapper">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input type="text" id="search-input" placeholder="Search by lecture name or topic...">
+            <!-- Search & Dropdown Group -->
+            <div class="search-filter-group">
+                <!-- Search -->
+                <div class="search-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search by lecture name or topic...">
+                </div>
+
+                <!-- Topic Selector & More Filter Dropdowns -->
+                <div class="filter-selects">
+                    <select id="topic-filter">
+                        <option value="All">All Topics</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Phase Tabs -->
@@ -159,12 +169,7 @@
                 <button class="tab-btn" data-phase="Advanced Maths">Advanced</button>
             </div>
 
-            <!-- Topic Selector & More Filter Dropdowns -->
-            <div class="filter-selects">
-                <select id="topic-filter">
-                    <option value="All">All Topics</option>
-                </select>
-            </div>
+
 
             <!-- Quick Status Filters -->
             <div class="status-pills-bar">
