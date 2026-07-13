@@ -86,6 +86,11 @@
     -webkit-font-smoothing: antialiased;
 }
 
+html {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
 body {
     background: var(--bg-gradient);
     color: var(--text-primary);
@@ -1131,6 +1136,29 @@ tr.completed-row td {
     .dashboard-grid { grid-template-columns: 1fr; }
     .phase-grid { grid-template-columns: 1fr; }
     .bottom-bar { flex-direction: column; gap: 12px; text-align: center; }
+    
+    /* Hide import, export, and reset buttons on phone */
+    .file-input-wrapper,
+    #btn-export,
+    #btn-reset {
+        display: none !important;
+    }
+    
+    /* Swipeable category tabs on mobile instead of wrapping */
+    .filter-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        width: 100%;
+        justify-content: flex-start;
+    }
+    .filter-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    .tab-btn {
+        flex-shrink: 0;
+    }
 }
 
 /* Cloud Sync Styling & Animations */
