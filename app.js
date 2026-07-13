@@ -409,7 +409,7 @@ function updatePhaseStats() {
             </div>
             <div class="phase-stats">
                 <span>Topics Completed:</span>
-                <span style="font-weight:700; font-family: 'JetBrains Mono', monospace;">${completed}/${total} (${percent}%)</span>
+                <span style="font-weight:700;">${completed}/${total} (${percent}%)</span>
             </div>
         `;
         container.appendChild(card);
@@ -531,7 +531,7 @@ function renderLectures() {
         const classNoCell = document.createElement('td');
         const countIndexPrefix = currentSubject === "maths" ? "Class" : "Item";
         classNoCell.innerHTML = `
-            <div style="font-weight: 700; font-family: 'JetBrains Mono', monospace;">#${l.classNo}</div>
+            <div style="font-weight: 700;">#${l.classNo}</div>
             <span class="phase-badge ${l.phase.toLowerCase().replace(/[^a-z]/g, '')}" style="font-size: 0.65rem; padding: 2px 5px;">${l.phase}</span>
         `;
         tr.appendChild(classNoCell);

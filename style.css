@@ -837,7 +837,7 @@ tr.completed-row td {
     background: transparent;
     text-align: center;
     color: var(--text-primary);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
     font-size: 0.85rem;
     outline: none;
     -moz-appearance: textfield;
@@ -867,7 +867,7 @@ tr.completed-row td {
 
 /* Notes & Date actions */
 .date-badge {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
