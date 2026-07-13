@@ -168,12 +168,3 @@ Spelling error,Practice,Practice,6,False,False,False,,False,,
 Cloze Test,Comprehension,Comprehension,1,False,False,False,,False,,
 Passage,Comprehension,Comprehension,2,False,False,False,,False,,
 PQRS/ Sentence Rearrangement,Comprehension,Comprehension,3,False,False,False,,False,,`;
-
-const defaultDailyCsv = `Lecture,Phase,Topic,Class No,Completed,Revision 1,Revision 2,Questions Solved,Weak Topic,Date Completed,Notes
-Solve 1 Maths Sectional Mock,Mock practice,Mock Test,1,False,False,False,,False,,
-Practice 50 GK Questions,Daily Practice,General Knowledge,2,False,False,False,,False,,
-Revise English Vocab (50 words),Vocabulary,English,3,False,False,False,,False,,
-Read Newspaper Editorial (30m),Reading skill,English,4,False,False,False,,False,,
-Solve 1 Reasoning Mock,Mock practice,Reasoning,5,False,False,False,,False,,
-Revise Core Formula Notes,Revision,Maths,6,False,False,False,,False,,
-Analyze Mock Errors,Analysis,Mock Test,7,False,False,False,,False,,`;

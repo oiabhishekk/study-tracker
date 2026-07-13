@@ -3,11 +3,11 @@ function parseCSV(text) {
     const lines = [];
     let row = [""];
     let inQuotes = false;
-    
+
     for (let i = 0; i < text.length; i++) {
         const c = text[i];
-        const next = text[i+1];
-        
+        const next = text[i + 1];
+
         if (c === '"') {
             if (inQuotes && next === '"') {
                 row[row.length - 1] += '"';
@@ -34,11 +34,11 @@ function parseCSV(text) {
 // Convert state array back to CSV string
 function stateToCSV(lecturesList) {
     const headers = [
-        "Lecture", "Phase", "Topic", "Class No", "Completed", 
-        "Revision 1", "Revision 2", "Questions Solved", "Weak Topic", 
+        "Lecture", "Phase", "Topic", "Class No", "Completed",
+        "Revision 1", "Revision 2", "Questions Solved", "Weak Topic",
         "Date Completed", "Notes"
     ];
-    
+
     const rows = lecturesList.map(l => {
         const escape = (val) => {
             if (val === null || val === undefined) return '';
@@ -48,7 +48,7 @@ function stateToCSV(lecturesList) {
             }
             return str;
         };
-        
+
         return [
             escape(l.lecture),
             escape(l.phase),
@@ -63,7 +63,7 @@ function stateToCSV(lecturesList) {
             escape(l.notes)
         ].join(',');
     });
-    
+
     return [headers.join(','), ...rows].join('\n');
 }
 
@@ -84,9 +84,6 @@ let syncTimeout = null;
 
 // Initialize App
 window.addEventListener('DOMContentLoaded', () => {
-    // Check for daily resets first
-    checkDailyReset();
-
     // Theme setup
     const savedTheme = localStorage.getItem('ssc_maths_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -94,100 +91,34 @@ window.addEventListener('DOMContentLoaded', () => {
     if (themeIcon) {
         updateThemeIcon(savedTheme);
     }
-    
+
     // Set initial subject color theme on html tag
     document.documentElement.setAttribute('data-subject', currentSubject);
-    
+
     // Load Data
     loadState();
-    
+
     // Initialize Cloud Sync Settings and Badge
     loadCloudSettingsState();
-    
+
     // Populate dynamic filter tabs based on active subject
     populatePhaseTabs();
-    
+
     // Populate Dynamic Filters
     populateTopicFilter();
-    
+
     // Bind Event Listeners
     setupEventListeners();
-    
+
     // Initial Render
     updateDashboard();
     renderLectures();
-    
+
     // Auto-pull from cloud on start if configured
     if (githubToken && gistId) {
         pullFromCloud();
     }
 });
-
-// Run daily reset validation whenever tab gains focus
-window.addEventListener('focus', checkDailyReset);
-
-// Check and execute auto-reset for Daily Tasks at 4:00 AM
-function checkDailyReset() {
-    const now = new Date();
-    
-    // Get the current daily cycle boundary (4:00 AM)
-    const boundaryToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0, 0);
-    let currentCycleStart;
-    
-    if (now >= boundaryToday) {
-        currentCycleStart = boundaryToday;
-    } else {
-        currentCycleStart = new Date(boundaryToday);
-        currentCycleStart.setDate(currentCycleStart.getDate() - 1);
-    }
-    
-    const lastResetKey = 'ssc_daily_last_reset';
-    const lastResetVal = localStorage.getItem(lastResetKey);
-    const lastResetTime = lastResetVal ? parseInt(lastResetVal) : 0;
-    
-    // If the last reset was before the start of the current cycle, we need to reset!
-    if (lastResetTime < currentCycleStart.getTime()) {
-        const dailyKey = 'ssc_daily_progress';
-        const saved = localStorage.getItem(dailyKey);
-        
-        if (saved) {
-            try {
-                let dailyLectures = JSON.parse(saved);
-                dailyLectures = dailyLectures.map(l => ({
-                    ...l,
-                    completed: false,
-                    revision1: false,
-                    revision2: false,
-                    questionsSolved: 0,
-                    dateCompleted: ""
-                }));
-                localStorage.setItem(dailyKey, JSON.stringify(dailyLectures));
-                
-                // If we are currently viewing the daily tab, reload the state
-                if (currentSubject === 'daily') {
-                    lectures = dailyLectures;
-                    updateDashboard();
-                    renderLectures();
-                }
-                
-                // Save the reset timestamp
-                localStorage.setItem(lastResetKey, now.getTime().toString());
-                
-                // Silently push the reset state to Gist sync if active
-                if (gistId && githubToken) {
-                    pushToCloud(true);
-                }
-                
-                console.log("Daily Tasks reset successfully at 4:00 AM boundary.");
-            } catch (e) {
-                console.error("Failed to execute daily auto-reset:", e);
-            }
-        } else {
-            // First time seeding daily reset timestamp
-            localStorage.setItem(lastResetKey, now.getTime().toString());
-        }
-    }
-}
 
 // Load progress state from localStorage or default CSV
 function loadState() {
@@ -216,21 +147,19 @@ function loadDefaults() {
         rawData = typeof defaultReasoningCsv !== 'undefined' ? defaultReasoningCsv : '';
     } else if (currentSubject === 'english') {
         rawData = typeof defaultEnglishCsv !== 'undefined' ? defaultEnglishCsv : '';
-    } else if (currentSubject === 'daily') {
-        rawData = typeof defaultDailyCsv !== 'undefined' ? defaultDailyCsv : '';
     }
-    
+
     if (!rawData) {
         console.error(`Default data not found for subject: ${currentSubject}`);
         return;
     }
-    
+
     const parsed = parseCSV(rawData);
     if (parsed.length <= 1) {
         console.error("Parsed CSV is empty or invalid.");
         return;
     }
-    
+
     // Skip header row
     lectures = parsed.slice(1)
         .filter(row => row.length >= 4 && row[0].trim() !== "")
@@ -250,7 +179,7 @@ function loadDefaults() {
                 notes: row[10] || ""
             };
         });
-        
+
     saveState();
 }
 
@@ -263,50 +192,45 @@ function saveState() {
 // Switch between subjects
 function switchSubject(subject) {
     currentSubject = subject;
-    
+
     // Update HTML attribute for dynamic color styling overrides
     document.documentElement.setAttribute('data-subject', subject);
-    
+
     // Update headers and search bar labels
     const titleEl = document.getElementById('subject-title');
     const descEl = document.getElementById('subject-desc');
     const nextLabel = document.querySelector('#next-up-container').parentElement.querySelector('.stat-label');
-    
+
+    if (titleEl) titleEl.textContent = "Study Tracker";
+    document.title = "Study Tracker";
+
     if (subject === 'maths') {
-        if (titleEl) titleEl.textContent = "SSC Mathematics Prep";
-        if (descEl) descEl.textContent = "Track, revise, and master your syllabus";
+        if (descEl) descEl.textContent = "Mathematics progress, revision, and syllabus mastery";
         if (nextLabel) nextLabel.textContent = "Next Lecture";
     } else if (subject === 'gk') {
-        if (titleEl) titleEl.textContent = "GK Progress Tracker";
         if (descEl) descEl.textContent = "History, Geography, Polity, Science & General Awareness";
         if (nextLabel) nextLabel.textContent = "Next Topic";
     } else if (subject === 'reasoning') {
-        if (titleEl) titleEl.textContent = "SSC Reasoning Syllabus";
         if (descEl) descEl.textContent = "Time practice, visual, logical, and analytical topics";
         if (nextLabel) nextLabel.textContent = "Next Topic";
     } else if (subject === 'english') {
-        if (titleEl) titleEl.textContent = "English Language Syllabus";
         if (descEl) descEl.textContent = "Grammar rules, vocabulary lists, and comprehensions";
         if (nextLabel) nextLabel.textContent = "Next Topic";
-    } else if (subject === 'daily') {
-        if (titleEl) titleEl.textContent = "Daily Study Planner";
-        if (descEl) descEl.textContent = "Mark off mock tests, vocab revisions, and daily practice lists";
-        if (nextLabel) nextLabel.textContent = "Next Task";
     }
-    
+
     // Reset filters
     currentFilterPhase = "All";
     currentFilterStatus = "All";
     currentFilterTopic = "All";
     searchQuery = "";
-    
+
     // Clear inputs in DOM
     document.getElementById('search-input').value = '';
     document.querySelectorAll('.pill-btn').forEach(b => {
         if (b.getAttribute('data-status') === 'All') b.classList.add('active');
         else b.classList.remove('active');
     });
-    
+
     // Re-initialize dynamic layout components
     loadState();
     populatePhaseTabs();
@@ -319,16 +243,16 @@ function switchSubject(subject) {
 function populatePhaseTabs() {
     const tabContainer = document.querySelector('.filter-tabs');
     if (!tabContainer) return;
-    
+
     const phases = [...new Set(lectures.map(l => l.phase))].filter(Boolean);
-    
+
     let html = `<button class="tab-btn active" data-phase="All">All Parts</button>`;
     phases.forEach(phase => {
         html += `<button class="tab-btn" data-phase="${phase}">${phase}</button>`;
     });
-    
+
     tabContainer.innerHTML = html;
-    
+
     // Re-bind listeners to newly created tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -344,13 +268,13 @@ function populatePhaseTabs() {
 function populateTopicFilter() {
     const topicSelect = document.getElementById('topic-filter');
     if (!topicSelect) return;
-    
+
     // Get unique topics sorted alphabetically
     const topics = [...new Set(lectures.map(l => l.topic))].filter(Boolean).sort();
-    
+
     // Clear and add "All Topics"
     topicSelect.innerHTML = '<option value="All">All Topics</option>';
-    
+
     topics.forEach(topic => {
         const option = document.createElement('option');
         option.value = topic;
@@ -364,27 +288,27 @@ function updateDashboard() {
     const total = lectures.length;
     const completed = lectures.filter(l => l.completed).length;
     const progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
+
     // Revisions
     const rev1 = lectures.filter(l => l.revision1).length;
     const rev2 = lectures.filter(l => l.revision2).length;
     const rev1Percent = completed > 0 ? Math.round((rev1 / completed) * 100) : 0;
     const rev2Percent = completed > 0 ? Math.round((rev2 / completed) * 100) : 0;
-    
+
     // Questions and Weak Areas
     const totalQuestions = lectures.reduce((sum, l) => sum + (l.questionsSolved || 0), 0);
     const weakTopics = lectures.filter(l => l.weakTopic).length;
-    
+
     // Streak calculation
     const streak = calculateStreak();
-    
+
     // Next Suggestion
     const nextLecture = lectures.find(l => !l.completed);
-    
+
     // Update DOM Stats
     document.getElementById('total-stats-value').textContent = `${completed}/${total}`;
     document.getElementById('progress-percent-text').textContent = `${progressPercent}%`;
-    
+
     // Circular Progress stroke transition
     const circle = document.getElementById('progress-ring-circle');
     if (circle) {
@@ -394,20 +318,20 @@ function updateDashboard() {
         const offset = circumference - (progressPercent / 100) * circumference;
         circle.style.strokeDashoffset = offset;
     }
-    
+
     // Update Revisions Progress
     document.getElementById('rev1-stats-label').textContent = `${rev1}/${completed}`;
     document.getElementById('rev1-progress-fill').style.width = `${rev1Percent}%`;
     document.getElementById('rev2-stats-label').textContent = `${rev2}/${completed}`;
     document.getElementById('rev2-progress-fill').style.width = `${rev2Percent}%`;
-    
+
     // Update Questions & Weak
     document.getElementById('questions-stats-value').textContent = totalQuestions;
     document.getElementById('weak-stats-value').textContent = weakTopics;
-    
+
     // Update Streak
     document.getElementById('streak-value').textContent = streak;
-    
+
     // Update Next Up Widget
     const nextContainer = document.getElementById('next-up-container');
     if (nextLecture) {
@@ -438,7 +362,7 @@ function updateDashboard() {
             </div>
         `;
     }
-    
+
     // Update Phase Breakdown Grid
     updatePhaseStats();
 }
@@ -447,22 +371,22 @@ function updateDashboard() {
 function updatePhaseStats() {
     const container = document.getElementById('phase-cards-container');
     if (!container) return;
-    
+
     container.innerHTML = '';
-    
+
     const phases = [];
     lectures.forEach(l => {
         if (!phases.includes(l.phase)) {
             phases.push(l.phase);
         }
     });
-    
+
     phases.forEach((phase, idx) => {
         const phaseLectures = lectures.filter(l => l.phase === phase);
         const total = phaseLectures.length;
         const completed = phaseLectures.filter(l => l.completed).length;
         const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-        
+
         let gradient = 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
         if (currentSubject === 'gk') {
             gradient = 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)';
@@ -470,10 +394,8 @@ function updatePhaseStats() {
             gradient = 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)';
         } else if (currentSubject === 'english') {
             gradient = 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)';
-        } else if (currentSubject === 'daily') {
-            gradient = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
         }
-        
+
         const card = document.createElement('div');
         card.className = 'phase-card';
         card.innerHTML = `
@@ -499,45 +421,45 @@ function calculateStreak() {
         .map(l => l.dateCompleted)
         .filter(d => d && /^\d{4}-\d{2}-\d{2}$/.test(d)) // Validate YYYY-MM-DD
         .sort();
-        
+
     if (dates.length === 0) return 0;
-    
+
     const uniqueDates = [...new Set(dates)];
-    
+
     const dateObjs = uniqueDates.map(d => {
         const [year, month, day] = d.split('-').map(Number);
         return new Date(year, month - 1, day);
     });
-    
+
     dateObjs.sort((a, b) => b - a);
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     let latestCompletion = dateObjs[0];
-    
+
     if (latestCompletion < yesterday) {
         return 0;
     }
-    
+
     let streak = 1;
     let currentCheck = latestCompletion;
-    
+
     for (let i = 1; i < dateObjs.length; i++) {
         const prevDay = new Date(currentCheck);
         prevDay.setDate(prevDay.getDate() - 1);
-        
+
         if (dateObjs[i].getTime() === prevDay.getTime()) {
             streak++;
             currentCheck = dateObjs[i];
         } else {
-            break; 
+            break;
         }
     }
-    
+
     return streak;
 }
 
@@ -545,23 +467,23 @@ function calculateStreak() {
 function renderLectures() {
     const tbody = document.getElementById('lectures-list');
     if (!tbody) return;
-    
+
     tbody.innerHTML = '';
-    
+
     // Apply filters
     const filtered = lectures.filter(l => {
         // Search Filter
         const query = searchQuery.toLowerCase().trim();
-        const matchesSearch = query === "" || 
-            l.lecture.toLowerCase().includes(query) || 
+        const matchesSearch = query === "" ||
+            l.lecture.toLowerCase().includes(query) ||
             l.topic.toLowerCase().includes(query);
-            
+
         // Phase Filter
         const matchesPhase = currentFilterPhase === "All" || l.phase === currentFilterPhase;
-        
+
         // Topic Filter
         const matchesTopic = currentFilterTopic === "All" || l.topic === currentFilterTopic;
-        
+
         // Status Filter
         let matchesStatus = true;
         if (currentFilterStatus === "Completed") {
@@ -575,10 +497,10 @@ function renderLectures() {
         } else if (currentFilterStatus === "Weak") {
             matchesStatus = l.weakTopic;
         }
-        
+
         return matchesSearch && matchesPhase && matchesTopic && matchesStatus;
     });
-    
+
     if (filtered.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -592,18 +514,18 @@ function renderLectures() {
         document.getElementById('showing-count').textContent = `Showing 0 items`;
         return;
     }
-    
+
     const itemLabel = currentSubject === "maths" ? "lectures" : "topics";
     document.getElementById('showing-count').textContent = `Showing ${filtered.length} of ${lectures.length} ${itemLabel}`;
-    
+
     // Render Rows (dynamically generated for optimal speed)
     const fragment = document.createDocumentFragment();
-    
+
     filtered.forEach(l => {
         const tr = document.createElement('tr');
         tr.id = `row-${l.id}`;
         if (l.completed) tr.classList.add('completed-row');
-        
+
         // Class No & Phase Badge
         const classNoCell = document.createElement('td');
         const countIndexPrefix = currentSubject === "maths" ? "Class" : "Item";
@@ -612,18 +534,18 @@ function renderLectures() {
             <span class="phase-badge ${l.phase.toLowerCase().replace(/[^a-z]/g, '')}" style="font-size: 0.65rem; padding: 2px 5px;">${l.phase}</span>
         `;
         tr.appendChild(classNoCell);
-        
+
         // Title
         const titleCell = document.createElement('td');
         titleCell.style.fontWeight = '500';
         titleCell.textContent = l.lecture;
         tr.appendChild(titleCell);
-        
+
         // Topic Pill
         const topicCell = document.createElement('td');
         topicCell.innerHTML = `<span class="topic-pill">${l.topic}</span>`;
         tr.appendChild(topicCell);
-        
+
         // Completed toggle
         const statusCell = document.createElement('td');
         statusCell.innerHTML = `
@@ -633,7 +555,7 @@ function renderLectures() {
             </label>
         `;
         tr.appendChild(statusCell);
-        
+
         // Revisions Checkboxes
         const revCell = document.createElement('td');
         const disabledAttr = !l.completed ? 'style="opacity: 0.4; pointer-events: none;"' : '';
@@ -644,7 +566,7 @@ function renderLectures() {
             </div>
         `;
         tr.appendChild(revCell);
-        
+
         // Questions Count input
         const qCell = document.createElement('td');
         qCell.innerHTML = `
@@ -655,7 +577,7 @@ function renderLectures() {
             </div>
         `;
         tr.appendChild(qCell);
-        
+
         // Weak Topic star
         const weakCell = document.createElement('td');
         weakCell.innerHTML = `
@@ -664,12 +586,12 @@ function renderLectures() {
             </button>
         `;
         tr.appendChild(weakCell);
-        
+
         // Date & Notes drawer button
         const actionCell = document.createElement('td');
         const notesClass = l.notes ? 'has-notes' : '';
         const notesTitle = l.notes ? 'Edit Notes (Has content)' : 'Add Notes';
-        
+
         actionCell.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <span class="date-badge">${l.dateCompleted ? formatDate(l.dateCompleted) : '--'}</span>
@@ -682,10 +604,10 @@ function renderLectures() {
             </div>
         `;
         tr.appendChild(actionCell);
-        
+
         fragment.appendChild(tr);
     });
-    
+
     tbody.appendChild(fragment);
 }
 
@@ -700,7 +622,7 @@ function formatDate(dateStr) {
 function toggleComplete(id, completed) {
     const lecture = lectures.find(l => l.id === id);
     if (!lecture) return;
-    
+
     lecture.completed = completed;
     if (completed) {
         if (!lecture.dateCompleted) {
@@ -715,10 +637,10 @@ function toggleComplete(id, completed) {
         lecture.revision2 = false;
         lecture.dateCompleted = "";
     }
-    
+
     saveState();
     updateDashboard();
-    
+
     const tr = document.getElementById(`row-${id}`);
     if (tr) {
         if (completed) {
@@ -734,7 +656,7 @@ function toggleComplete(id, completed) {
 function toggleRevision(id, revNumber) {
     const lecture = lectures.find(l => l.id === id);
     if (!lecture || !lecture.completed) return;
-    
+
     if (revNumber === 1) {
         lecture.revision1 = !lecture.revision1;
         if (!lecture.revision1) lecture.revision2 = false;
@@ -745,7 +667,7 @@ function toggleRevision(id, revNumber) {
         }
         lecture.revision2 = !lecture.revision2;
     }
-    
+
     saveState();
     updateDashboard();
     renderLectures();
@@ -755,15 +677,15 @@ function toggleRevision(id, revNumber) {
 function adjustQuestions(id, delta) {
     const lecture = lectures.find(l => l.id === id);
     if (!lecture) return;
-    
+
     let val = (lecture.questionsSolved || 0) + delta;
     if (val < 0) val = 0;
-    
+
     lecture.questionsSolved = val;
-    
+
     const input = document.getElementById(`questions-${id}`);
     if (input) input.value = val;
-    
+
     saveState();
     updateDashboard();
 }
@@ -772,12 +694,12 @@ function adjustQuestions(id, delta) {
 function setQuestions(id, value) {
     const lecture = lectures.find(l => l.id === id);
     if (!lecture) return;
-    
+
     let val = parseInt(value);
     if (isNaN(val) || val < 0) val = 0;
-    
+
     lecture.questionsSolved = val;
-    
+
     saveState();
     updateDashboard();
 }
@@ -786,27 +708,27 @@ function setQuestions(id, value) {
 function toggleWeak(id) {
     const lecture = lectures.find(l => l.id === id);
     if (!lecture) return;
-    
+
     lecture.weakTopic = !lecture.weakTopic;
-    
+
     saveState();
     updateDashboard();
     renderLectures();
 }
 
 // Open Notes Side Drawer
-window.openNotesDrawer = function(id) {
+window.openNotesDrawer = function (id) {
     const lecture = lectures.find(l => l.id === id);
     if (!lecture) return;
-    
+
     currentEditingIndex = id;
-    
+
     document.getElementById('drawer-lecture-title').textContent = lecture.lecture;
     document.getElementById('drawer-phase-topic').textContent = `${lecture.phase} • ${lecture.topic}`;
-    
+
     document.getElementById('drawer-date').value = lecture.dateCompleted || '';
     document.getElementById('drawer-notes').value = lecture.notes || '';
-    
+
     document.getElementById('drawer-backdrop').classList.add('active');
     document.getElementById('drawer').classList.add('active');
 };
@@ -821,20 +743,20 @@ function closeNotesDrawer() {
 // Save Notes Drawer changes
 function saveNotes() {
     if (currentEditingIndex === null) return;
-    
+
     const lecture = lectures.find(l => l.id === currentEditingIndex);
     if (!lecture) return;
-    
+
     const dateVal = document.getElementById('drawer-date').value;
     const notesVal = document.getElementById('drawer-notes').value;
-    
+
     lecture.dateCompleted = dateVal;
     lecture.notes = notesVal;
-    
+
     if (dateVal && !lecture.completed) {
         lecture.completed = true;
     }
-    
+
     saveState();
     updateDashboard();
     renderLectures();
@@ -846,9 +768,9 @@ function saveNotes() {
 function showToast(message, type = "success") {
     const toast = document.getElementById('toast');
     if (!toast) return;
-    
+
     toast.textContent = message;
-    
+
     if (type === "success") {
         toast.style.background = "var(--success-gradient)";
         toast.style.boxShadow = "0 10px 25px rgba(16, 185, 129, 0.3)";
@@ -856,9 +778,9 @@ function showToast(message, type = "success") {
         toast.style.background = "var(--warning-gradient)";
         toast.style.boxShadow = "0 10px 25px rgba(245, 158, 11, 0.3)";
     }
-    
+
     toast.classList.add('active');
-    
+
     setTimeout(() => {
         toast.classList.remove('active');
     }, 3000);
@@ -898,13 +820,13 @@ function setupEventListeners() {
         localStorage.setItem('ssc_maths_theme', nextTheme);
         updateThemeIcon(nextTheme);
     });
-    
+
     // Search
     document.getElementById('search-input').addEventListener('input', (e) => {
         searchQuery = e.target.value;
         renderLectures();
     });
-    
+
     // Status filter pills (Completed, Pending, R1 Pending, R2 Pending, Weak)
     document.querySelectorAll('.pill-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -914,19 +836,19 @@ function setupEventListeners() {
             renderLectures();
         });
     });
-    
+
     // Topic Selector
     document.getElementById('topic-filter').addEventListener('change', (e) => {
         currentFilterTopic = e.target.value;
         renderLectures();
     });
-    
+
     // Drawer handlers
     document.getElementById('drawer-backdrop').addEventListener('click', closeNotesDrawer);
     document.getElementById('drawer-close').addEventListener('click', closeNotesDrawer);
     document.getElementById('drawer-cancel').addEventListener('click', closeNotesDrawer);
     document.getElementById('drawer-save').addEventListener('click', saveNotes);
-    
+
     // Export CSV (Subject-specific download naming)
     document.getElementById('btn-export').addEventListener('click', () => {
         try {
@@ -945,29 +867,29 @@ function setupEventListeners() {
             showToast("Export failed!", "warning");
         }
     });
-    
+
     // Import CSV File Selector (Imports into active subject)
     document.getElementById('csv-file-picker').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        
+
         const reader = new FileReader();
-        reader.onload = function(evt) {
+        reader.onload = function (evt) {
             try {
                 const text = evt.target.result;
                 const parsed = parseCSV(text);
-                
+
                 if (parsed.length <= 1) {
                     showToast("Uploaded CSV is empty!", "warning");
                     return;
                 }
-                
+
                 const headers = parsed[0].map(h => h.trim().toLowerCase());
                 if (!headers.includes("lecture") || !headers.includes("phase") || !headers.includes("topic")) {
                     showToast("Invalid CSV structure. Missing columns!", "warning");
                     return;
                 }
-                
+
                 const lectureIdx = headers.indexOf("lecture");
                 const phaseIdx = headers.indexOf("phase");
                 const topicIdx = headers.indexOf("topic");
@@ -979,7 +901,7 @@ function setupEventListeners() {
                 const weakIdx = headers.indexOf("weak topic");
                 const dateIdx = headers.indexOf("date completed");
                 const notesIdx = headers.indexOf("notes");
-                
+
                 lectures = parsed.slice(1)
                     .filter(row => row.length >= 4 && row[lectureIdx].trim() !== "")
                     .map((row, idx) => {
@@ -998,7 +920,7 @@ function setupEventListeners() {
                             notes: notesIdx !== -1 ? row[notesIdx] : ""
                         };
                     });
-                
+
                 saveState();
                 populatePhaseTabs();
                 populateTopicFilter();
@@ -1012,7 +934,7 @@ function setupEventListeners() {
         };
         reader.readAsText(file);
     });
-    
+
     // Reset defaults button (Resets active subject)
     document.getElementById('btn-reset').addEventListener('click', () => {
         const confirmStr = prompt(`WARNING: This will reset all progress for ${currentSubject.toUpperCase()} to default!\nTo confirm, please type "yesiwanttoresetthis":`);
@@ -1047,10 +969,10 @@ function setupEventListeners() {
 function loadCloudSettingsState() {
     githubToken = localStorage.getItem('ssc_maths_github_token') || '';
     gistId = localStorage.getItem('ssc_maths_gist_id') || '';
-    
+
     document.getElementById('cloud-token').value = githubToken;
     document.getElementById('cloud-gist-id').value = gistId;
-    
+
     if (githubToken && gistId) {
         updateSyncStatus('synced');
     } else {
@@ -1063,7 +985,7 @@ function openCloudDrawer() {
     document.getElementById('cloud-token').value = githubToken;
     document.getElementById('cloud-gist-id').value = gistId;
     updateSyncControls();
-    
+
     document.getElementById('cloud-backdrop').classList.add('active');
     document.getElementById('cloud-drawer').classList.add('active');
 }
@@ -1101,12 +1023,12 @@ function updateSyncStatus(status) {
     const btn = document.getElementById('btn-cloud-settings');
     const icon = document.getElementById('cloud-status-icon');
     const text = document.getElementById('cloud-status-text');
-    
+
     if (!btn || !icon || !text) return;
-    
+
     btn.classList.remove('btn-cloud-synced', 'btn-cloud-syncing', 'btn-cloud-error');
     icon.classList.remove('syncing-spin');
-    
+
     if (status === 'synced') {
         btn.classList.add('btn-cloud-synced');
         text.textContent = "Synced";
@@ -1131,7 +1053,7 @@ function updateSyncControls() {
     const hasConfig = githubToken && gistId;
     document.getElementById('btn-cloud-pull').disabled = !hasConfig;
     document.getElementById('btn-cloud-push').disabled = !hasConfig;
-    
+
     const disconnectBtn = document.getElementById('cloud-drawer-disconnect');
     if (disconnectBtn) {
         disconnectBtn.style.display = hasConfig ? 'inline-flex' : 'none';
@@ -1145,10 +1067,10 @@ async function createCloudGist() {
         showToast("GitHub Personal Access Token is required to create a Gist!", "warning");
         return;
     }
-    
+
     githubToken = inputToken;
     updateSyncStatus('syncing');
-    
+
     try {
         const getSubjectCSV = (subject) => {
             if (subject === currentSubject) {
@@ -1158,50 +1080,48 @@ async function createCloudGist() {
             if (saved) {
                 try {
                     return stateToCSV(JSON.parse(saved));
-                } catch (e) {}
+                } catch (e) { }
             }
-            
+
             let rawData = '';
             if (subject === 'maths') rawData = typeof defaultCsvData !== 'undefined' ? defaultCsvData : '';
             else if (subject === 'gk') rawData = typeof defaultGkCsv !== 'undefined' ? defaultGkCsv : '';
             else if (subject === 'reasoning') rawData = typeof defaultReasoningCsv !== 'undefined' ? defaultReasoningCsv : '';
             else if (subject === 'english') rawData = typeof defaultEnglishCsv !== 'undefined' ? defaultEnglishCsv : '';
-            else if (subject === 'daily') rawData = typeof defaultDailyCsv !== 'undefined' ? defaultDailyCsv : '';
-            
+
             const parsed = parseCSV(rawData);
             const dummy = parsed.slice(1).map((row, idx) => ({
-                lecture: row[0], phase: row[1], topic: row[2], classNo: parseInt(row[3])||0,
+                lecture: row[0], phase: row[1], topic: row[2], classNo: parseInt(row[3]) || 0,
                 completed: false, revision1: false, revision2: false, questionsSolved: 0,
                 weakTopic: false, dateCompleted: "", notes: ""
             }));
             return stateToCSV(dummy);
         };
-        
+
         const body = {
-            description: "SSC Study Tracker Progress Multi-Subject Backup",
+            description: "Study Tracker Progress Multi-Subject Backup",
             public: false,
             files: {
                 "SSC_Maths_Notion_Import.csv": { "content": getSubjectCSV('maths') },
                 "SSC_GK_Notion_Import.csv": { "content": getSubjectCSV('gk') },
                 "SSC_Reasoning_Notion_Import.csv": { "content": getSubjectCSV('reasoning') },
-                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') },
-                "SSC_Daily_Notion_Import.csv": { "content": getSubjectCSV('daily') }
+                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') }
             }
         };
-        
+
         const result = await githubRequest('POST', '/gists', body);
         gistId = result.id;
-        
+
         localStorage.setItem('ssc_maths_github_token', githubToken);
         localStorage.setItem('ssc_maths_gist_id', gistId);
         document.getElementById('cloud-gist-id').value = gistId;
-        
+
         updateSyncStatus('synced');
         updateSyncControls();
         showToast("Cloud Gist initialized with all subjects!");
     } catch (err) {
         console.error(err);
-        githubToken = localStorage.getItem('ssc_maths_github_token') || ''; 
+        githubToken = localStorage.getItem('ssc_maths_github_token') || '';
         updateSyncStatus('error');
         showToast("Gist creation failed: " + err.message, "warning");
     }
@@ -1211,23 +1131,23 @@ async function createCloudGist() {
 async function linkCloudGist() {
     const inputToken = document.getElementById('cloud-token').value.trim();
     const inputGistId = document.getElementById('cloud-gist-id').value.trim();
-    
+
     if (!inputToken || !inputGistId) {
         showToast("Token and Gist ID are both required!", "warning");
         return;
     }
-    
+
     githubToken = inputToken;
     gistId = inputGistId;
     updateSyncStatus('syncing');
-    
+
     try {
         const result = await githubRequest('GET', `/gists/${gistId}`);
-        const hasAnyFile = result.files["SSC_Maths_Notion_Import.csv"] || 
-                           result.files["SSC_GK_Notion_Import.csv"] || 
-                           result.files["SSC_Reasoning_Notion_Import.csv"] || 
-                           result.files["SSC_English_Notion_Import.csv"];
-        
+        const hasAnyFile = result.files["SSC_Maths_Notion_Import.csv"] ||
+            result.files["SSC_GK_Notion_Import.csv"] ||
+            result.files["SSC_Reasoning_Notion_Import.csv"] ||
+            result.files["SSC_English_Notion_Import.csv"];
+
         if (!hasAnyFile) {
             if (confirm("Linked Gist found, but it doesn't contain tracker files. Initialize and upload current local progress?")) {
                 localStorage.setItem('ssc_maths_github_token', githubToken);
@@ -1241,7 +1161,7 @@ async function linkCloudGist() {
             }
             return;
         }
-        
+
         localStorage.setItem('ssc_maths_github_token', githubToken);
         localStorage.setItem('ssc_maths_gist_id', gistId);
         updateSyncStatus('synced');
@@ -1262,15 +1182,15 @@ async function pullFromCloud() {
     updateSyncStatus('syncing');
     try {
         const result = await githubRequest('GET', `/gists/${gistId}`);
-        
+
         const pullSubject = (subject, filename) => {
             const file = result.files[filename];
             if (!file) return;
-            
+
             const csvContent = file.content;
             const parsed = parseCSV(csvContent);
             if (parsed.length <= 1) return;
-            
+
             const headers = parsed[0].map(h => h.trim().toLowerCase());
             const lectureIdx = headers.indexOf("lecture");
             const phaseIdx = headers.indexOf("phase");
@@ -1283,7 +1203,7 @@ async function pullFromCloud() {
             const weakIdx = headers.indexOf("weak topic");
             const dateIdx = headers.indexOf("date completed");
             const notesIdx = headers.indexOf("notes");
-            
+
             const parsedLectures = parsed.slice(1)
                 .filter(row => row.length >= 4 && row[lectureIdx].trim() !== "")
                 .map((row, idx) => {
@@ -1302,19 +1222,18 @@ async function pullFromCloud() {
                         notes: notesIdx !== -1 ? row[notesIdx] : ""
                     };
                 });
-            
+
             localStorage.setItem(`ssc_${subject}_progress`, JSON.stringify(parsedLectures));
             if (subject === currentSubject) {
                 lectures = parsedLectures;
             }
         };
-        
+
         pullSubject('maths', 'SSC_Maths_Notion_Import.csv');
         pullSubject('gk', 'SSC_GK_Notion_Import.csv');
         pullSubject('reasoning', 'SSC_Reasoning_Notion_Import.csv');
         pullSubject('english', 'SSC_English_Notion_Import.csv');
-        pullSubject('daily', 'SSC_Daily_Notion_Import.csv');
-        
+
         populatePhaseTabs();
         populateTopicFilter();
         updateDashboard();
@@ -1341,35 +1260,33 @@ async function pushToCloud(isAuto = false) {
             if (saved) {
                 try {
                     return stateToCSV(JSON.parse(saved));
-                } catch (e) {}
+                } catch (e) { }
             }
-            
+
             let rawData = '';
             if (subject === 'maths') rawData = typeof defaultCsvData !== 'undefined' ? defaultCsvData : '';
             else if (subject === 'gk') rawData = typeof defaultGkCsv !== 'undefined' ? defaultGkCsv : '';
             else if (subject === 'reasoning') rawData = typeof defaultReasoningCsv !== 'undefined' ? defaultReasoningCsv : '';
             else if (subject === 'english') rawData = typeof defaultEnglishCsv !== 'undefined' ? defaultEnglishCsv : '';
-            else if (subject === 'daily') rawData = typeof defaultDailyCsv !== 'undefined' ? defaultDailyCsv : '';
-            
+
             const parsed = parseCSV(rawData);
             const dummy = parsed.slice(1).map((row, idx) => ({
-                lecture: row[0], phase: row[1], topic: row[2], classNo: parseInt(row[3])||0,
+                lecture: row[0], phase: row[1], topic: row[2], classNo: parseInt(row[3]) || 0,
                 completed: false, revision1: false, revision2: false, questionsSolved: 0,
                 weakTopic: false, dateCompleted: "", notes: ""
             }));
             return stateToCSV(dummy);
         };
-        
+
         const body = {
             files: {
                 "SSC_Maths_Notion_Import.csv": { "content": getSubjectCSV('maths') },
                 "SSC_GK_Notion_Import.csv": { "content": getSubjectCSV('gk') },
                 "SSC_Reasoning_Notion_Import.csv": { "content": getSubjectCSV('reasoning') },
-                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') },
-                "SSC_Daily_Notion_Import.csv": { "content": getSubjectCSV('daily') }
+                "SSC_English_Notion_Import.csv": { "content": getSubjectCSV('english') }
             }
         };
-        
+
         await githubRequest('PATCH', `/gists/${gistId}`, body);
         updateSyncStatus('synced');
         if (!isAuto) showToast("All progress synced to Cloud Gist!");
@@ -1394,23 +1311,23 @@ function triggerAutoSync() {
 function saveCloudSettings() {
     const inputToken = document.getElementById('cloud-token').value.trim();
     const inputGistId = document.getElementById('cloud-gist-id').value.trim();
-    
+
     if (inputToken !== githubToken || inputGistId !== gistId) {
         githubToken = inputToken;
         gistId = inputGistId;
-        
+
         if (githubToken) {
             localStorage.setItem('ssc_maths_github_token', githubToken);
         } else {
             localStorage.removeItem('ssc_maths_github_token');
         }
-        
+
         if (gistId) {
             localStorage.setItem('ssc_maths_gist_id', gistId);
         } else {
             localStorage.removeItem('ssc_maths_gist_id');
         }
-        
+
         loadCloudSettingsState();
         showToast("Cloud configuration saved!");
     }
@@ -1424,10 +1341,10 @@ function disconnectCloud() {
         localStorage.removeItem('ssc_maths_gist_id');
         githubToken = '';
         gistId = '';
-        
+
         document.getElementById('cloud-token').value = '';
         document.getElementById('cloud-gist-id').value = '';
-        
+
         updateSyncStatus('local');
         updateSyncControls();
         closeCloudDrawer();

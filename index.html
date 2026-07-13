@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSC Mathematics Daily Progress Tracker</title>
-    <link rel="icon" type="image/png" href="favicon.png">
+    <title>Study Tracker</title>
+    <meta name="application-name" content="Study Tracker">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="style.css?v=3">
 </head>
+
 <body>
     <div class="container">
         <!-- Subject Switcher Tabs -->
@@ -15,19 +19,19 @@
             <button class="subj-btn" data-subject="gk">🌎 GK (General Knowledge)</button>
             <button class="subj-btn" data-subject="reasoning">🧠 Reasoning</button>
             <button class="subj-btn" data-subject="english">🔤 English</button>
-            <button class="subj-btn" data-subject="daily">📅 Daily Tasks</button>
         </div>
 
         <!-- Header Section -->
         <header class="glass-panel">
             <div class="brand-section">
-                <h1 id="subject-title">SSC Mathematics Prep</h1>
-                <p id="subject-desc">Track, revise, and master your syllabus</p>
+                <h1 id="subject-title">Study Tracker</h1>
+                <p id="subject-desc">Mathematics progress, revision, and syllabus mastery</p>
             </div>
-            
+
             <div class="action-bar">
                 <!-- Streak Badge -->
-                <div class="btn" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2); color: var(--warning); cursor: default; gap: 6px;">
+                <div class="btn"
+                    style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2); color: var(--warning); cursor: default; gap: 6px;">
                     <span>🔥</span>
                     <span id="streak-value" style="font-weight: 800;">0</span>
                     <span>Day Streak</span>
@@ -50,7 +54,9 @@
                 </button>
 
                 <!-- Reset Defaults -->
-                <button class="btn" id="btn-reset" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05);" title="Reset to Defaults">
+                <button class="btn" id="btn-reset"
+                    style="color: var(--danger); border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05);"
+                    title="Reset to Defaults">
                     <span>Reset</span>
                 </button>
 
@@ -68,8 +74,11 @@
             <div class="glass-panel stat-card info">
                 <div class="progress-ring-container">
                     <svg class="progress-ring" width="80" height="80">
-                        <circle class="progress-ring-track" stroke="rgba(255,255,255,0.05)" stroke-width="6" fill="transparent" cx="40" cy="40" r="34"></circle>
-                        <circle id="progress-ring-circle" class="progress-ring-circle" stroke="var(--primary)" stroke-width="6" fill="transparent" cx="40" cy="40" r="34" stroke-dasharray="213.628" stroke-dashoffset="213.628"></circle>
+                        <circle class="progress-ring-track" stroke="rgba(255,255,255,0.05)" stroke-width="6"
+                            fill="transparent" cx="40" cy="40" r="34"></circle>
+                        <circle id="progress-ring-circle" class="progress-ring-circle" stroke="var(--primary)"
+                            stroke-width="6" fill="transparent" cx="40" cy="40" r="34" stroke-dasharray="213.628"
+                            stroke-dashoffset="213.628"></circle>
                     </svg>
                     <span id="progress-percent-text" class="progress-percentage">0%</span>
                 </div>
@@ -147,7 +156,8 @@
             <div class="search-filter-group">
                 <!-- Search -->
                 <div class="search-wrapper">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
@@ -215,7 +225,8 @@
             <!-- Bottom Counter Status bar -->
             <div class="bottom-bar">
                 <span id="showing-count">Showing 0 of 0 lectures</span>
-                <span>💡 Tip: Click revision buttons R1/R2 to toggle study stages, or mark weak topics for prioritized review.</span>
+                <span>💡 Tip: Click revision buttons R1/R2 to toggle study stages, or mark weak topics for prioritized
+                    review.</span>
             </div>
         </div>
     </div>
@@ -226,11 +237,12 @@
         <div class="drawer-header">
             <div>
                 <h3 id="drawer-lecture-title">Lecture Notes</h3>
-                <p id="drawer-phase-topic" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;"></p>
+                <p id="drawer-phase-topic" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">
+                </p>
             </div>
             <button class="close-btn" id="drawer-close">&times;</button>
         </div>
-        
+
         <div class="drawer-body">
             <!-- Completion Date -->
             <div class="form-group">
@@ -241,7 +253,8 @@
             <!-- Detailed Notes -->
             <div class="form-group">
                 <label for="drawer-notes">Study Notes / Important Formulas</label>
-                <textarea id="drawer-notes" placeholder="Write formulas, weak spots, or things to review here..."></textarea>
+                <textarea id="drawer-notes"
+                    placeholder="Write formulas, weak spots, or things to review here..."></textarea>
             </div>
         </div>
 
@@ -257,27 +270,34 @@
         <div class="drawer-header">
             <div>
                 <h3>GitHub Gist Cloud Sync</h3>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Sync progress across all your devices securely</p>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Sync progress across all
+                    your devices securely</p>
             </div>
             <button class="close-btn" id="cloud-drawer-close">&times;</button>
         </div>
-        
+
         <div class="drawer-body">
             <!-- Setup instructions info box -->
-            <div class="glass-panel" style="padding: 16px; font-size: 0.82rem; line-height: 1.45; background: rgba(99, 102, 241, 0.04); border-color: rgba(99, 102, 241, 0.12); border-radius: var(--radius-md); margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div class="glass-panel"
+                style="padding: 16px; font-size: 0.82rem; line-height: 1.45; background: rgba(99, 102, 241, 0.04); border-color: rgba(99, 102, 241, 0.12); border-radius: var(--radius-md); margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
                 <h4 style="color: var(--primary); font-weight: 700; font-size: 0.9rem;">Setup Instructions:</h4>
                 <div style="color: var(--text-secondary); display: flex; flex-direction: column; gap: 6px;">
                     <div>
                         <strong style="color: var(--text-primary);">Step 1: Access Token</strong><br>
-                        Go to <a href="https://github.com/settings/tokens" target="_blank" style="color: var(--primary); text-decoration: underline; font-weight: 600;">GitHub Settings</a> and click <em>Generate new token (classic)</em>. Name it, check the <strong>gist</strong> box, click generate, and copy the token.
+                        Go to <a href="https://github.com/settings/tokens" target="_blank"
+                            style="color: var(--primary); text-decoration: underline; font-weight: 600;">GitHub
+                            Settings</a> and click <em>Generate new token (classic)</em>. Name it, check the
+                        <strong>gist</strong> box, click generate, and copy the token.
                     </div>
                     <div>
                         <strong style="color: var(--text-primary);">Step 2: Initialize Sync</strong><br>
-                        Paste the token below, leave Gist ID empty, and click <strong>Create New Gist</strong>. The app will automatically initialize a private backup Gist.
+                        Paste the token below, leave Gist ID empty, and click <strong>Create New Gist</strong>. The app
+                        will automatically initialize a private backup Gist.
                     </div>
                     <div>
                         <strong style="color: var(--text-primary);">Step 3: Connect Other Devices</strong><br>
-                        On another device, open the app, paste the same Token and Gist ID, click <strong>Link Gist ID</strong>, and click 📥 <strong>Pull From Cloud</strong>.
+                        On another device, open the app, paste the same Token and Gist ID, click <strong>Link Gist
+                            ID</strong>, and click 📥 <strong>Pull From Cloud</strong>.
                     </div>
                 </div>
             </div>
@@ -291,9 +311,10 @@
             <!-- Gist ID Input -->
             <div class="form-group">
                 <label for="cloud-gist-id">Gist ID (Optional)</label>
-                <input type="text" id="cloud-gist-id" placeholder="Paste existing Gist ID, or leave blank to create new">
+                <input type="text" id="cloud-gist-id"
+                    placeholder="Paste existing Gist ID, or leave blank to create new">
             </div>
-            
+
             <!-- Setup & Creation Actions -->
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn btn-primary" id="btn-create-gist" style="flex: 1;">Create New Gist</button>
@@ -306,10 +327,14 @@
             <div class="form-group">
                 <label>Manual Synchronization Actions</label>
                 <div style="display: flex; gap: 10px; margin-top: 4px;">
-                    <button class="btn" id="btn-cloud-pull" style="flex: 1; border-color: rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.05); color: var(--success);" disabled>
+                    <button class="btn" id="btn-cloud-pull"
+                        style="flex: 1; border-color: rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.05); color: var(--success);"
+                        disabled>
                         📥 Pull From Cloud
                     </button>
-                    <button class="btn" id="btn-cloud-push" style="flex: 1; border-color: rgba(99, 102, 241, 0.2); background: rgba(99, 102, 241, 0.05); color: var(--primary);" disabled>
+                    <button class="btn" id="btn-cloud-push"
+                        style="flex: 1; border-color: rgba(99, 102, 241, 0.2); background: rgba(99, 102, 241, 0.05); color: var(--primary);"
+                        disabled>
                         📤 Push To Cloud
                     </button>
                 </div>
@@ -317,7 +342,8 @@
         </div>
 
         <div class="drawer-footer">
-            <button class="btn" id="cloud-drawer-disconnect" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); margin-right: auto; display: none;">Disconnect</button>
+            <button class="btn" id="cloud-drawer-disconnect"
+                style="color: var(--danger); border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); margin-right: auto; display: none;">Disconnect</button>
             <button class="btn" id="cloud-drawer-cancel">Cancel</button>
             <button class="btn btn-primary" id="cloud-drawer-save">Save Settings</button>
         </div>
@@ -331,4 +357,5 @@
     <script src="other_subjects_data.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
