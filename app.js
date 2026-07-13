@@ -828,6 +828,16 @@ function setupEventListeners() {
         renderLectures();
     });
     
+    // Status filter pills (Completed, Pending, R1 Pending, R2 Pending, Weak)
+    document.querySelectorAll('.pill-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            currentFilterStatus = e.currentTarget.getAttribute('data-status');
+            renderLectures();
+        });
+    });
+    
     // Topic Selector
     document.getElementById('topic-filter').addEventListener('change', (e) => {
         currentFilterTopic = e.target.value;
