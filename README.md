@@ -10,6 +10,28 @@ Featuring visual dashboard analytics, a local-first architecture, CSV Import/Exp
 
 Simply open `https://oiabhishekk.github.io/study-tracker/` in any web browser to get started immediately. Your progress is saved automatically on your browser (`localStorage`).
 
+To keep this synced across devices, follow this process:
+1. Click the **Cloud Sync** button (with the cloud icon ☁️) in the top-right header.
+2. In the side settings panel, paste your **GitHub Personal Access Token** (make sure it has `gist` permissions).
+3. **If initializing for the first time**: Leave the *Gist ID* input blank and click **Create New Gist Backup**. This automatically generates a private Gist and populates it with your progress backup.
+4. **On another device**: Paste your Token and Gist ID, click **Link Existing Gist**, and then click the 📥 **Pull From Cloud** button to import your saved progress.
+
+### 🔑 How to Get Your GitHub Credentials (From Scratch)
+
+If you don't have a GitHub account or don't know how to get a token, follow these simple steps:
+
+1. **Sign Up**: If you don't have a GitHub account, go to [GitHub.com](https://github.com/) and register for a free account.
+2. **Access Developer Settings**:
+   - Log into GitHub, click your **profile photo** in the top-right corner, and click **Settings**.
+   - In the left sidebar, scroll all the way to the bottom and click **Developer settings**.
+3. **Create the Token**:
+   - Click **Personal access tokens** in the left menu, then select **Tokens (classic)**.
+   - Click the **Generate new token** button in the top-right and choose **Generate new token (classic)**.
+   - Give the token a name (e.g., `Study Tracker Backup`).
+   - Check the box next to **`gist`** (this is the only permission the app needs to save your files).
+   - Scroll to the bottom and click **Generate token**.
+4. **Copy & Save**: Copy the green token code (starts with `ghp_`) immediately. *Note: You will only see this code once, so save it somewhere safe!*
+
 ---
 
 ## 🤖 How to Import Your Own Custom Syllabus using AI
